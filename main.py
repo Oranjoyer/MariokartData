@@ -7,6 +7,7 @@ import logManager
 
 INIT = False
 
+# Executes Init Functions Of all Modules
 def init():
     camManager.init()
     templateCompare.init()

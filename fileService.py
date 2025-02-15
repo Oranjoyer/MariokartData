@@ -6,7 +6,7 @@ import cv2
 IMAGE_EXTENSIONS={".jpg",".gif",".png",".tiff",".svg"}
 BASE_PATH=""
 fileList = []
-# Start of file classes
+# Class That Stores Data associated with a file. Formats as the proper filetype 
 class FileContainer:
     def __init__(self,name,file,path,typeOf):
         self.name = name
@@ -21,13 +21,7 @@ class FileContainer:
         else:
             self.fileData = file
 
-# class FileFromBytes:
-#     def __init__(self,name,fileBytes):
-#         self.path = "Memory Only File"
-#         self.name = name
-#         self.file = None
-#         self.fileData = fileBytes
-# End of file classes
+
 # Sends Log Message with 'FileService' source
 def sendMessage(type,message):
     logManager.sendMessage(type, "FileService", message)
@@ -163,6 +157,7 @@ def formatStringsAsPath(*str):
         path += s + "/"
     return path
 
+# Checks whether string has or doesn't have a query based on whether it is desired
 def checkStringForQuery(str,query,desired):
     if(str.contain(query)):
         return desired

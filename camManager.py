@@ -20,7 +20,21 @@ def getCaptureMethod():
         return cv2.CAP_V4L2
     elif(sys.platform.lower()=="windows"):
         return cv2.CAP_DSHOW
+def cropPercent(image, coords):
+    frame_height = frame.shape[0]
+    frame_width = frame.shape[1]
+    spot1 = [int(frame_width*(coords.topLeft[0]*.01)), int(frame_height*(coords.topLeft[1]*0.01))]
+    spot2 = [int(frame_width*bottomRight[0]*.01), int(frame_height*coords.bottomRight[1]*.01)]
+    return image[spot1[1]:spot2[1], spot1[0]:spot2[0]]
 
+def cropHD(image, coords):
+    if(image.shape[0:2] != (720,1280)):
+            sendMessage("Info", "Resizing cropped image to 1280x720")
+            image = cv2.resize(img,1280,720)
+    return cropDirect(image, coords)
+
+def cropDirect(image, coords):
+    return image[coords.topLeft[1]:coords.bottomRight[1], coords.topLeft[0]:coords.bottomRight[0]]
 # Send Messages to Logs
 def sendMessage(type, message):
     logManager.sendMessage(type, "CameraManager", message)
@@ -99,9 +113,9 @@ class CameraSource:
 
 # Class Using Tuples for Coordinate Pairs (Top Left is 0,0)
 class CoordPair:
-    def __init__(self, topLeft, topRight):
+    def __init__(self, topLeft, bottomRight):
         self.topLeft = topLeft
-        self.topRight = topRight
+        self.bottomRight = bottomRight
 
 # Class which grabs image from camera
 class VideoSource:
