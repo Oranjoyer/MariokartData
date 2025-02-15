@@ -4,9 +4,10 @@ from cv2_enumerate_cameras import enumerate_cameras
 import logManager
 import numpy as np
 
-# Initialize Global Variables For this File
 CAPTURE_METHOD = cv2.CAP_ANY
 cameras = []
+
+# Initialize Global Variables For this File
 def init():
     global CAPTURE_METHOD
     CAPTURE_METHOD=getCaptureMethod()
@@ -64,6 +65,7 @@ class CameraSource:
             if(sourcesUsing.len()==0):
                 deactivateCamera()
             return
+
     # Initializes Camera if not active yet
     async def activateCamera(self):
         if(self.captureObject != None):
