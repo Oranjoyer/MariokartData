@@ -4,6 +4,10 @@ from cv2_enumerate_cameras import enumerate_cameras
 import logManager
 import numpy as np
 
+# Send Message to Logs
+def sendMessage(type,message):
+    logManager.sendMessage(type, "CameraManager",message)
+
 CAPTURE_METHOD = cv2.CAP_ANY
 cameras = []
 

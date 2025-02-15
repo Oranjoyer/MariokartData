@@ -2,9 +2,11 @@ import asyncio
 import os
 import logManager
 import cv2
+import csv
 
 IMAGE_EXTENSIONS={".jpg",".gif",".png",".tiff",".svg"}
-BASE_PATH=""
+CSV_EXT = ".csv"
+BASE_PATH="./"
 fileList = []
 # Class That Stores Data associated with a file. Formats as the proper filetype 
 class FileContainer:
@@ -14,10 +16,12 @@ class FileContainer:
         if(type(file)==file):
             self.fileData = file.read()
             file.close()
-        if(typeOf == "Text"):
+        if((typeOf == "Text" )| (typeOf == "CSV")):
             self.fileData = self.fileData.decode("utf-8")
         elif(typeOf == "Image"):
             self.fileData = cv2.imdecode(self.fileData)
+        if(typeOf == "CSV"):
+            self.fileData = csv.DictReader(fileData)
         else:
             self.fileData = file
 
@@ -29,25 +33,32 @@ def sendMessage(type,message):
 # Loads file into memory or retrieves file from list; returns file
 async def loadFile(filePath,name):
     # sendMessage("Info", "Checking for preloaded files; disregard 2 potential error messages")
-    nameFile = getFileByName(name)
-    pathFile = getFileByPath(filePath)
+    nameFile = getFileByName(name,True)
+    pathFile = getFileByPath(filePath,True)
     fileType = "Bytes"
     for imgExt in IMAGE_EXTENSIONS:
         if(imgExt in filePath[-len(imgExt)]):
             fileType = "Image"
+    if(CSV_EXT in filePath[-len(CSV_EXT)]):
+            fileType = "CSV"
     if(nameFile != None):
         sendMessage("Info",f"File by name \'{name}\' already loaded. Retrieving preloaded file instead")
-        return getFileByName(name)
+        return nameFile
+        # break
     elif(pathFile != None):
-        sendMessage("Info",f"File at path \'{path}\' already loaded. Retrieving preloaded file instead")
-        return getFileByPath(filePath)
-    if(os.path.isfile(filePath)):
+        sendMessage("Info",f"File at path \'{filePath}\' already loaded. Retrieving preloaded file instead")
+        return pathFile
+        # break
+    elif(not(os.path.isfile(filePath))):
         sendMessage("Error",f"No file at path \'{filePath}\' returning null value instead of loading file")
         return None
-    if(not(os.access(filePath, os.R_OK))):
+        # break
+    elif(not(os.access(filePath, os.R_OK))):
         sendMessage("Error",f"Insufficient permissions to load file at path \'{filePath}\' returning null value instead of loading file")
         return None
-    loadedFile = FileContainer(name,file.open(filePath, rb),filePath,fileType)
+        # break
+    loadedFile = FileContainer(name,open(filePath, "rb"),filePath,fileType)
+    sendMessage("Info",f"Successfuly loaded file \'{name}\' at \'{filePath}\'")
     fileList.append(loadedFile)
     return loadedFile
 
@@ -64,35 +75,39 @@ def loadFileFromMemory(fileData,name,fileType):
     return loadedFile
 
 # Retrieves stored file with specific name
-def getFileByName(name):
+def getFileByName(name,*suppress):
     for file in fileList:
         if(file.name == name):
             return file
-    sendMessage("Error", f"No preloaded file found with name \'{name}\' returning null value instead")
+    if(True not in suppress):
+        sendMessage("Error", f"No preloaded file found with name \'{name}\' returning null value instead")
     return None
 
 # Retrieves stored file with specific path
-def getFileByPath(path):
+def getFileByPath(path,*suppress):
     for file in fileList:
         if(file.path == path):
             return file
-    sendMessage("Error", f"No preloaded file found with path \'{path}\' returning null value instead")
+    if(True not in suppress):
+        sendMessage("Error", f"No preloaded file found with path \'{path}\' returning null value instead")
     return None
 
 # Retrieves Index value in list of stored file with specific name
-def getFileIndexByName(name):
+def getFileIndexByName(name,*suppress):
     for i in range(fileList.len()):
         if(fileList[i].name==name):
             return i
-    sendMessage("Error", f"No preloaded file found with name \'{name}\' returning null index instead")
+    if(True not in suppress):
+        sendMessage("Error", f"No preloaded file found with name \'{name}\' returning null index instead")
     return -1
 
-# Retrieves Index value in list of stored file with specific path
-def getFileIndexByPath(path):
+# Retrieves Index value in list of stored file with specific path. Add True as arg to suppress errors
+def getFileIndexByPath(path,*suppress):
     for i in range(fileList.len()):
         if(fileList[i].path==path):
             return i
-    sendMessage("Error",f"No preloaded file found with path \'{path}\' returning null index instead")
+    if(True not in suppress):
+        sendMessage("Error",f"No preloaded file found with path \'{path}\' returning null index instead")
     return -1
 
 # Unloads file with specific name from memory
@@ -154,7 +169,10 @@ def loadFilesFromQueries(dir,*queries):
 def formatStringsAsPath(*str):
     path = ""
     for s in str:
-        path += s + "/"
+        if (len(s)!=0):
+            path +=s
+        if(s[-1]!="/"):
+            path += "/"
     return path
 
 # Checks whether string has or doesn't have a query based on whether it is desired

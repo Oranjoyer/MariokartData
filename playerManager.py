@@ -30,3 +30,5 @@ def createPlayerFromDict(diction):
     elif(type(diction)!=str):
         sendMessage("Error","Unsupported Object Passed Into \'createPlayer\' function. Please use dictionary or properly formatted JSON string")
         return None
+
+        

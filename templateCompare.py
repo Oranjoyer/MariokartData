@@ -4,12 +4,7 @@ from camManager import CoordPair
 import fileService
 from fileService import BASE_PATH
 from camManager import cropDirect
-ASSETS_FOLDER = "assets"
-PLACE_TEMPLATE_FOLDER = "placeTemplates"
-RACE_PROGRESS_FOLDER = "raceProgress"
-RESULT_FOLDER = "result"
-
-TEMPLATE_FOLDERS = (PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RANKING_FOLDER)
+import logManager
 
 def grayscale(frame):
     return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -27,35 +22,6 @@ def colorPass(frame):
     passF = passF - cv2.GaussianBlur(passF,(21,21),3)+127
     passF = cv2.Laplacian(passF, -1)
 
-# Simplifies Function to Retrieve Asset files from the filesystem
-def getAsset(folder,name):
-    fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder)+name,name)
-
-# Send Message to Logs
-def sendMessage(type,message):
-    logManager.sendMessage(type, "CameraManager",message)
-
-# Gather Template Files and Place in FileService
-def obtainTemplates():
-# Calls Every "ObtainTemplate" Function
-    obtainPlaceTemplates()
-    obtainRaceProgressTemplates()
-    obtainResultsTemplates()
-
-# Collect Every Race Progress Indicator Template from Folder
-def obtainRaceProgressTemplates():
-    getAsset(RACE_PROGRESS_FOLDER,"Go.jpg")
-    getAsset(RACE_PROGRESS_FOLDER,"Finish.jpg")
-
-# Collect Every Place Template Image from Folder
-def obtainPlaceTemplates():
-    for i in range(12):
-        getAsset(PLACE_TEMPLATE_FOLDER,f"{i+1}Place.jpg")
-
-# Collect Result Screen Templates
-def obtainResultsTemplates():
-    getAsset(RESULT_FOLDER,"TeamPoints.jpg")
-
 # Class to Store Data about template image
 class Template:
     def __init__(self,name,image,cropLocation,tolerance):
@@ -66,7 +32,7 @@ class Template:
         if(type(self.cropLocation) == tuple):
             sendMessage("Info", f"Converting Crop Location Coords in template \'{name}\' to CoordPair Object")
             self.cropLocation = CoordPair(cropLocation)
-        if(CoordPair[1][0]-CoordPair[0][0] != image.shape()[1] | CoordPair[1][1]-CoordPair[0][1] != image.shape()[0]):
+        if(CoordPair[1][0]-CoordPair[0][0] != image.shape[1] | CoordPair[1][1]-CoordPair[0][1] != image.shape[0]):
             sendMessage("Warning",f"Template \'{name}\' initialized with different shape than crop coordinate shape")
     def compareWithImage(self,img,tolerance):
         img = edgeDetect(img)
@@ -106,7 +72,3 @@ def bulkCompare(templateList,img,tolerance):
     else:
         sendMessage("ExInfo",f"Matching template,\'{maxRecog[0].name}\'")
     return maxRecog, index
-
-# Initializes all needed resources for this module
-def init():
-    obtainTemplates()

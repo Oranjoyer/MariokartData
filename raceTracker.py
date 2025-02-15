@@ -1,9 +1,14 @@
 import time
 import json
+import fileService
+from fileService import BASE_PATH
 
 # Sends Log Message with 'RaceTracker' source
 def sendMessage(type,message):
     logManager.sendMessage(type, "RaceTracker", message)
+def init():
+    asyncio.run(fileService.loadFile())
+
 
 class Track:
     def __init__(name,trackType,strategy,bestStartSpot):
