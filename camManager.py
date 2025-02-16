@@ -34,7 +34,7 @@ def cropPercent(image, coords):
 def cropHD(image, coords):
     if(image.shape[0:2] != (720,1280)):
             sendMessage("Info", "Resizing cropped image to 1280x720")
-            image = cv2.resize(img,1280,720)
+            image = cv2.resize(image,(1280,720))
     return cropDirect(image, coords)
 
 def cropDirect(image, coords):

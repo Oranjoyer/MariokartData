@@ -6,6 +6,7 @@ import camManager
 import logManager
 import templateCompare
 import assetManager
+from templateManager import constructTemplates
 
 INIT = False
 
@@ -20,4 +21,5 @@ def main():
     init()
     return
 
+constructTemplates()
 main()

@@ -2,10 +2,12 @@ import os
 import logManager
 import cv2
 import csv
+import numpy as np
+from io import BufferedReader
 
-IMAGE_EXTENSIONS={".jpg",".gif",".png",".tiff",".svg"}
+IMAGE_EXTENSIONS=(".jpg",".gif",".png",".tiff",".svg")
 CSV_EXT = ".csv"
-PLAINTEXT_EXT = {".txt",".json",".ini",".cfg",".js",".htm",".html"}
+PLAINTEXT_EXT = (".txt",".json",".ini",".cfg",".js",".htm",".html")
 BASE_PATH="./"
 fileList = []
 # Class That Stores Data associated with a file. Formats as the proper filetype 
@@ -13,17 +15,24 @@ class FileContainer:
     def __init__(self,name,file,path,typeOf):
         self.name = name
         self.path = path
-        if(type(file)==file):
+        self.fileData = None
+        if(type(file)==BufferedReader):
             self.fileData = file.read()
             file.close()
         if((typeOf == "Text" )| (typeOf == "CSV")):
             self.fileData = self.fileData.decode("utf-8")
         elif(typeOf == "Image"):
-            self.fileData = cv2.imdecode(self.fileData)
-        if(typeOf == "CSV"):
+            self.fileData = np.asarray(bytearray(self.fileData),dtype="uint8")
+            # cv2.imshow("test",self.fileData)
+            # cv2.waitKey(0)
+            # self.fileData = cv2.imdecode(self.fileData,cv2.IMREAD_COLOR)
+        elif(typeOf == "CSV"):
             self.fileData = csv.DictReader(fileData)
         else:
             self.fileData = file
+        print(self.fileData)
+    def __str__(self):
+        self.fileData
 
 
 # Sends Log Message with 'FileService' source
@@ -37,7 +46,7 @@ def loadFile(filePath,name):
     pathFile = getFileByPath(filePath,True)
     fileType = "Bytes"
     for imgExt in IMAGE_EXTENSIONS:
-        if(imgExt in filePath[-len(imgExt)]):
+        if(imgExt == filePath[-len(imgExt):]):
             fileType = "Image"
     if(CSV_EXT in filePath[-len(CSV_EXT)]):
             fileType = "CSV"
@@ -142,16 +151,16 @@ def unloadFileByPath(path):
     return
 
 # Finds Files in Directory based on Query list. Including a '!' as the first character and then the query wrapped in quotes marks exclusion
-def listFilesInDir(dir,*queries):
+def listFilesInDir(dir,queries):
     allInDir = os.listdir(dir)
-    files = [f for f in allInDir if(isFile(f))]
+    files = [f for f in allInDir if(os.path.isfile(formatStringsAsPath(dir,f)))]
 
     for q in queries:
         removeString = False
         currentQuery = q
-        if(f[0]=="!"):
+        if q[0]=='!':
             removeString = True
-            currentQuery = stringInQuotes(f[1:])[0]
+            currentQuery = stringInQuotes(q[1:])
         for f in allInDir:
             if(not(checkStringForQuery(f,currentQuery,not(removeString)))):
                 allInDir.remove(f)
@@ -159,20 +168,24 @@ def listFilesInDir(dir,*queries):
                 if(removeString):
                     sendMessage("ExInfo",f"File \'{f}\' filtered out of search list excluding for \'{currentQuery}\'")
                 else:
-                    sendMessage("ExInfo",f"File \'{f}\' filtered out of search list due to not including \'\'")
+                    sendMessage("ExInfo",f"File \'{f}\' filtered out of search list due to not including \'{currentQuery}\'")
     return allInDir
 
 # Loads Files from Directory into the FileService based on Query list. Including a '!' as the first character and then the query wrapped in quotes marks exclusion
-def loadFilesFromList(dir, *fileList):
+def loadFilesFromList(dir, fileList):
     returnedList = []
     if (dir[-1]!= "/") | (dir[-1] != "\\"):
-        dir.append("/")
+        dir + "/"
     for f in fileList:
-        returnedList.append(loadFile(dir+f,f))
+        temp = loadFile(dir+f,f)
+        if(type(temp)==FileContainer):
+            returnedList.append(temp)
+    if(len(returnedList) == 0):
+        sendMessage("Warning",f"No Files Found with names \'{fileList}\' in directory \'{dir}\'")
     return returnedList
 
 # Loads All Files in a Directory based on Query List. Including a '!' as the first character and then the query wrapped in quotes marks exclusion 
-def loadFilesFromQueries(dir,*queries):
+def loadFilesFromQueries(dir,queries):
     sendMessage("Info",f"Loading all files found in directory \'{dir}\' based on queries: {queries}")
     return loadFilesFromList(dir,listFilesInDir(dir,queries))
 
@@ -188,28 +201,28 @@ def formatStringsAsPath(*str):
 
 # Checks whether string has or doesn't have a query based on whether it is desired
 def checkStringForQuery(str,query,desired):
-    if(str.contain(query)):
+    if(query in str):
         return desired
     return not(desired)
 
 # Returns all the characters contained in quotes within a string as a list of groups. If String does not contain quotes, the function will return the passed string
-def stringInQuotes(str):
+def stringInQuotes(unfStr):
     strList = []
     currentString = ""
     startQuote = False
     quoteType = ''
-    if(not(str.contain("\'") | str.contain("\""))):
-        sendMessage("Warning",f"String \'{str}\' passed into \'stringInQuotes\' function without any quotes. Returning string as is")
-        return str
-    elif(totalQuotes(str)%2!=0):
-        sendMessage("Warning",f"String \'{str}\' passed into \'stringInQuotes\' function with odd number of quotes. String may not format properly. Avoid adding extra quotes in String")
-    for letter in str:
+    if ("\'" not in unfStr) & ("\"" not in unfStr):
+        sendMessage("Warning",f"String \'{unfStr}\' passed into \'stringInQuotes\' function without any quotes. Returning string as is")
+        return unfStr
+    elif(totalQuotes(unfStr)%2!=0):
+        sendMessage("Warning",f"String \'{unfStr}\' passed into \'stringInQuotes\' function with odd number of quotes. String may not format properly. Avoid adding extra quotes in String")
+    for letter in unfStr:
         if((letter == '\'' | letter == '\"') & startQuote == False):
             startQuote = True
             quoteType = letter
             sendMessage("ExInfo", f"QuoteType is set to \'{letter}\'")
         elif((letter == '\'' | letter == '\"') & letter != quoteType):
-            sendMessage("Warning",f"Non-Matching Quotes Present in String \'{str}\'. Avoid Adding Extra Quotes in String")
+            sendMessage("Warning",f"Non-Matching Quotes Present in String \'{unfStr}\'. Avoid Adding Extra Quotes in String")
         elif(letter == quoteType):
             startQuote = False
             strList.append(currentString)
