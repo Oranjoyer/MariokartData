@@ -33,11 +33,12 @@ def cropPercent(image, coords):
 
 def cropHD(image, coords):
     if(image.shape[0:2] != (720,1280)):
-            sendMessage("Info", "Resizing cropped image to 1280x720")
+            sendMessage("Info", "Resizing image to 1280x720 before cropping")
             image = cv2.resize(image,(1280,720))
     return cropDirect(image, coords)
 
 def cropDirect(image, coords):
+    sendMessage("ExInfo",f"Cropping Image of shape \'{image.shape}\'with Coordinates Bottom Left:\'{coords[0]}\' Bottom Right:\'{coords[1]}\'")
     return image[coords[0][1]:coords[1][1], coords[0][0]:coords[1][0]]
 # Send Messages to Logs
 def sendMessage(type, message):

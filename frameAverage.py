@@ -1,15 +1,18 @@
 import cv2
 import numpy as np
 
+
+# Execute Edge Detection Algorithm on OpenCV image and return result
+def grayscale(frame):
+    if(len(frame.shape)>2):
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return frame
 def edgeDetect(frame):
     passF = frame - cv2.GaussianBlur(frame,(21,21),3)+127
     if(len(passF.shape)>2):
-        passF = cv2.cvtColor(passF, cv2.COLOR_BGR2GRAY)
+        passF = grayscale(passF)
     passF = cv2.Laplacian(passF, -1)
     return passF
-def grayscale(frame):
-    print(frame)
-    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 def colorPass(frame):
     passF = frame
     passF = passF - cv2.GaussianBlur(passF,(21,21),3)+127

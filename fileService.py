@@ -22,7 +22,8 @@ class FileContainer:
         if((typeOf == "Text" )| (typeOf == "CSV")):
             self.fileData = self.fileData.decode("utf-8")
         elif(typeOf == "Image"):
-            self.fileData = np.asarray(bytearray(self.fileData),dtype="uint8")
+            self.fileData = np.frombuffer(self.fileData,np.uint8)
+            self.fileData = cv2.imdecode(self.fileData, cv2.IMREAD_COLOR)
             # cv2.imshow("test",self.fileData)
             # cv2.waitKey(0)
             # self.fileData = cv2.imdecode(self.fileData,cv2.IMREAD_COLOR)
@@ -30,7 +31,6 @@ class FileContainer:
             self.fileData = csv.DictReader(fileData)
         else:
             self.fileData = file
-        print(self.fileData)
     def __str__(self):
         self.fileData
 
@@ -106,7 +106,7 @@ def getFileByPath(path,*suppress):
 
 # Retrieves Index value in list of stored file with specific name
 def getFileIndexByName(name,*suppress):
-    for i in range(fileList.len()):
+    for i in range(len(fileList)):
         if(fileList[i].name==name):
             return i
     if(True not in suppress):
@@ -153,23 +153,36 @@ def unloadFileByPath(path):
 # Finds Files in Directory based on Query list. Including a '!' as the first character and then the query wrapped in quotes marks exclusion
 def listFilesInDir(dir,queries):
     allInDir = os.listdir(dir)
-    files = [f for f in allInDir if(os.path.isfile(formatStringsAsPath(dir,f)))]
+    # files = [f for f in allInDir if(os.path.isfile(formatStringsAsPath(dir,f)))]
+    files = []
+    for f in allInDir:
+        filePath = formatStringsAsPath(dir)+f
+        sendMessage("ExInfo",f"Checking if path \'{filePath}\' is a file")
+        if(os.path.isfile(filePath)):
+            files.append(f)
+            sendMessage("ExInfo",f"\'{f}\' is a file")
 
     for q in queries:
+        sendMessage("ExInfo",f"Current Amount of applicable entries before filtering for \'{q}\': {len(files)}")
         removeString = False
         currentQuery = q
+
+        # Check for Exclusion Parameter
         if q[0]=='!':
             removeString = True
             currentQuery = stringInQuotes(q[1:])
-        for f in allInDir:
-            if(not(checkStringForQuery(f,currentQuery,not(removeString)))):
-                allInDir.remove(f)
-                
-                if(removeString):
-                    sendMessage("ExInfo",f"File \'{f}\' filtered out of search list excluding for \'{currentQuery}\'")
-                else:
-                    sendMessage("ExInfo",f"File \'{f}\' filtered out of search list due to not including \'{currentQuery}\'")
-    return allInDir
+        
+        # Check If Remaining Files Apply to Query
+        if(removeString):
+            files = [f for f in files if currentQuery not in f]
+        else:
+            files = [f for f in files if currentQuery in f]
+        # for f in files:
+        #     queryApplicable=not(checkStringForQuery(f,currentQuery,not(removeString)))
+        #     sendMessage("ExInfo",f"Checking File \'{f}\' for query \'{q}\' |\t Remove: {queryApplicable}")
+        #     if(queryApplicable):
+        #         files.remove(f)
+    return files
 
 # Loads Files from Directory into the FileService based on Query list. Including a '!' as the first character and then the query wrapped in quotes marks exclusion
 def loadFilesFromList(dir, fileList):
