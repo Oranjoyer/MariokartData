@@ -115,12 +115,18 @@ class CameraSource:
         self.captureObject = None
         self.cameraActive = False
 
-# Class which grabs image from camera
+# Class which grabs image from camera. Optionally pass 2d tuple of (x1 y1) and (x2 y2) pairs
 class VideoSource:
-    def __init__(self, name, camera):
+    def __init__(self, name, camera,*cropPercent):
         self.name = name
         self.camera = camera
-        self.crop = (0,0),(100,100)
+        self.cropPercent = ((0,0),(100,100))
+        if(len(cropCoords)!=0 & len(cropCoords) == 2):
+            self.cropPercent = cropPercent
+        elif(len(cropCoords)==1):
+            sendMessage("Error",f"Where's the other percent coordinate for videoSource of name\'{name}\' Using default Value instead")
+        elif(len(cropCoords)>2):
+            sendMessage("Error",f"Too many arguements for percent coordinate Pair in videoSource of name \'{name}\' Using default value instead")
 
     # Get Latest Image from CameraSource Object
     def getImage(self):
