@@ -21,16 +21,27 @@ def colorPass(frame):
     return passF
 
 
+# # Get Average Frame but Edge Detection
+# def getAverageFrame(frameList):
+#     # averageFrame = np.zeros((720,1280), np.uint8)
+#     # global DEBUG
+#     if len(frameList) < 1:
+#         return np.zeros((720,1280), np.uint8)
+#     averageFrame = edgeDetect(frameList[0])
+#     for i in range(len(frameList)-1):
+#         averageFrame = cv2.addWeighted(averageFrame, 1-getWeight(i), edgeDetect(frameList[i+1]), getWeight(i),0.0)
+#     return cv2.normalize(averageFrame, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
 # Get Average Frame but Edge Detection
 def getAverageFrame(frameList):
     # averageFrame = np.zeros((720,1280), np.uint8)
     # global DEBUG
     if len(frameList) < 1:
         return np.zeros((720,1280), np.uint8)
-    averageFrame = edgeDetect(frameList[0])
+    averageFrame = grayscale(frameList[0])
     for i in range(len(frameList)-1):
-        averageFrame = cv2.addWeighted(averageFrame, 1-getWeight(i), edgeDetect(frameList[i+1]), getWeight(i),0.0)
-    return cv2.normalize(averageFrame, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        averageFrame = cv2.addWeighted(averageFrame, 1-getWeight(i), grayscale(frameList[i+1]), getWeight(i),0.0)
+    return edgeDetect(cv2.normalize(averageFrame, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U))
 
 # Function to get the weight of a new element added to an average
 def getWeight(iterations):
