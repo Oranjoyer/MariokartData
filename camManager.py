@@ -27,8 +27,8 @@ def getCaptureMethod():
 def cropPercent(image, coords):
     frame_height = frame.shape[0]
     frame_width = frame.shape[1]
-    spot1 = [int(frame_width*(coords.topLeft[0]*.01)), int(frame_height*(coords.topLeft[1]*0.01))]
-    spot2 = [int(frame_width*bottomRight[0]*.01), int(frame_height*coords.bottomRight[1]*.01)]
+    spot1 = [int(frame_width*(coords[0][0]*.01)), int(frame_height*(coords[0][1]*0.01))]
+    spot2 = [int(frame_width*coords[1][0]*.01), int(frame_height*coords[1][1]*.01)]
     return image[spot1[1]:spot2[1], spot1[0]:spot2[0]]
 
 def cropHD(image, coords):
@@ -38,7 +38,7 @@ def cropHD(image, coords):
     return cropDirect(image, coords)
 
 def cropDirect(image, coords):
-    return image[coords.topLeft[1]:coords.bottomRight[1], coords.topLeft[0]:coords.bottomRight[0]]
+    return image[coords[0][1]:coords[1][1], coords[0][0]:coords[1][0]]
 # Send Messages to Logs
 def sendMessage(type, message):
     logManager.sendMessage(type, "CameraManager", message)
@@ -115,18 +115,12 @@ class CameraSource:
         self.captureObject = None
         self.cameraActive = False
 
-# Class Using Tuples for Coordinate Pairs (Top Left is 0,0)
-class CoordPair:
-    def __init__(self, topLeft, bottomRight):
-        self.topLeft = topLeft
-        self.bottomRight = bottomRight
-
 # Class which grabs image from camera
 class VideoSource:
     def __init__(self, name, camera):
         self.name = name
         self.camera = camera
-        self.crop = CoordPair((0,0),(100,100))
+        self.crop = (0,0),(100,100)
 
     # Get Latest Image from CameraSource Object
     def getImage(self):

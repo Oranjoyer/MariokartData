@@ -5,11 +5,14 @@ import averageFrame
 import cv2
 import camManager
 import json
+from assetManager import ASSETS_FOLDER
 from fileService import BASE_PATH
 from templateCompare import CoordPair
 from templateCompare import Template
 TEMPLATE_DIR = "MKImageData"
+
 OUTPUT_DIR = "templatesMade"
+TEMPLATE_FILETYPE = ".jpg"
 
 # Need to Rework these create Functions
 def createPlaces():
@@ -43,11 +46,21 @@ def createTemplate(name,coords,queries,tolerance,path,*storeQueried):
     averageImage = averageFrame.getAverageFrame([cv2.resize(file.fileData,1280,720) for file in fileList])
     templateImg = camManager.cropHD(averageFrame,coords)
     templateObj = Template(name,templateImg,coords,tolerance,path)
-    cv2.imwrite(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path,name+".jpg"),templateImg)
+    cv2.imwrite(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path,name+TEMPLATE_FILETYPE),templateImg)
     templateJSON = open(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path,name+".json"),w)
     templateJSON.write(templateObj.asJson())
     templateJSON.close()
     if(True not in storeQueried):
         fileService.unloadFilesFromNameList([file.name for file in fileList])
+
+# Function to load Template Images and JSONs as template objects. All templates should be saved as .jpg files or otherwise match TEMPLATE_FILETYPE and be in the same directory with same name as corresponding JSON contained in ASSETS_FOLDER as stated in assetManager.py
+def loadTemplate(folder,name):
+    tempImg = fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder+TEMPLATE_FILETYPE),name)
+    tempJSON = fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder+".json"),name)
+
+    
+
+
+
 
 

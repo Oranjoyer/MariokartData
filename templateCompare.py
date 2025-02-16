@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from camManager import CoordPair
 import fileService
 from fileService import BASE_PATH
 from camManager import cropDirect
@@ -31,12 +30,9 @@ class Template:
         self.name = name
         self.image = grayscale(image)
         self.cropLocation = cropLocation
-        self.defTolerance = tolerance
-        self.path = path
-        if(type(self.cropLocation) == tuple):
-            sendMessage("Info", f"Converting Crop Location Coords in template \'{name}\' to CoordPair Object")
-            self.cropLocation = CoordPair(cropLocation)
-        if(CoordPair[1][0]-CoordPair[0][0] != image.shape[1] | CoordPair[1][1]-CoordPair[0][1] != image.shape[0]):
+        self.defTolerance = tolerance # default tolerance value
+        self.path = path # path of file
+        if(self.croplocation[1][0]-self.croplocation[0][0] != image.shape[1] | self.croplocation[1][1]-self.croplocation[0][1] != image.shape[0]):
             sendMessage("Warning",f"Template \'{name}\' initialized with different shape than crop coordinate shape")
     def compareWithImage(self,img,tolerance):
         img = edgeDetect(img)
@@ -46,14 +42,20 @@ class Template:
             sendMessage("Info", "Resizing comparison image to 1280x720")
             img = cv2.resize(img,1280,720)
 
-        return compareImages(self,img,CoordPair((0,0),self.image.shape),self.cropLocation)
+        return compareImages(self,img,self.croplocation((0,0),self.image.shape),self.cropLocation)
     
     # Returns Template Details formatted as json String
     def asJson():
         diction = __dict__()
         diction.pop("image")
 
-        return json.parse(diction)
+        return json.dumps(diction)
+    
+    @staticmethod
+    def reconstructTemplate(img, storedJson):
+        if(type(storedJson)==str):
+            storedJson = json.parse(storedJson)
+        templateObj = Template(storedJson["name"],img,storedJson["cropLocation"],storedJson["tolerance"],storedJson["path"])
     
 # Compare an Image With a Template Image (Not Object) (Based on 720p) (Returns Boolean)
 def compareImages(templateImg, image, templateCoords, imageCoords, tolerance):

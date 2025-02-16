@@ -5,6 +5,7 @@ import csv
 
 IMAGE_EXTENSIONS={".jpg",".gif",".png",".tiff",".svg"}
 CSV_EXT = ".csv"
+PLAINTEXT_EXT = {".txt",".json",".ini",".cfg",".js",".htm",".html"}
 BASE_PATH="./"
 fileList = []
 # Class That Stores Data associated with a file. Formats as the proper filetype 
@@ -40,6 +41,9 @@ def loadFile(filePath,name):
             fileType = "Image"
     if(CSV_EXT in filePath[-len(CSV_EXT)]):
             fileType = "CSV"
+    for extend in PLAINTEXT_EXT:
+        if(extend in filePath[-len(extend)]):
+            fileType = "Text"
     if(nameFile != None):
         sendMessage("Info",f"File by name \'{name}\' already loaded. Retrieving preloaded file instead")
         return nameFile
