@@ -1,7 +1,7 @@
 import fileService
 from frameAverage import grayscale, edgeDetect,getAverageFrame
 import cv2
-import camManager
+from imageMgt import cropHD
 import json
 from fileService import BASE_PATH, ASSETS_FOLDER
 import logManager
@@ -89,6 +89,13 @@ class Template:
 def createPlaces():
     for i in range(12):
         createTemplate(f"{i+1}Place",((1086,568),((1086+130),(568+121))),("Race","Drive","!PlaceChange",PLACES_FORMATTED[i]),0.15,"placeTemplates")
+def createLaps():
+    for i in range(3):
+        createTemplate(f"Lap{i+1}",((153,644),(153+130,644+51)),[f"Lap{i+1}"],0.15,"raceProgress")
+def createGo():
+    createTemplate("Go",((468,236),(468+343,236+154)),["Go!"],0.1,"raceProgress")
+def createFinish():
+    createTemplate("Finish",((305,236),(305+669,236+154)),("Finish","Line"),0.15,"raceProgress")
 
 # Builds Templates from Queries and Saves a JSON with the other data about it. All Images Used to Make Templates Should be 1280x720 (resize function just in case)
 def createTemplate(name,coords,queries,tolerance,path):
@@ -103,7 +110,7 @@ def createTemplate(name,coords,queries,tolerance,path):
     averageImage = getAverageFrame(imageList)
     # print(averageImage.shape)
     templateImg = averageImage
-    templateImg = camManager.cropHD(averageImage,coords)
+    templateImg = cropHD(averageImage,coords)
     templateObj = Template(name,templateImg,coords,tolerance,path)
     cv2.imwrite(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path)+name+TEMPLATE_FILETYPE,templateImg)
     templateJSON = open(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path)+name+".json","w")
@@ -121,10 +128,20 @@ def loadTemplate(folder,name):
     loadedTemplate = Template.reconstructTemplate(tempImg.fileData,tempJSON.fileData)
     templatesList.append(loadedTemplate)
     sendMessage("Info",f"Template successfully loaded with data: {loadedTemplate}")
+    return loadedTemplate
 
+def getLoadedTemplate(name):
+    for template in templatesList:
+        if(name == template.name):
+            return template
+    sendMessage("Error",f"Loaded Template by Name \'{name}\' not found. Returning null value instead")
+    return None
+    
 def constructTemplates():
     createPlaces()
-    
+    createGo()
+    createFinish()
+    createLaps()
 
 
 

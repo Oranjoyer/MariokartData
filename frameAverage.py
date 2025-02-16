@@ -20,7 +20,6 @@ def colorPass(frame):
 
     return passF
 
-
 # # Get Average Frame but Edge Detection (Edge Detect Every Image)
 # def getAverageFrame(frameList):
 #     # averageFrame = np.zeros((720,1280), np.uint8)

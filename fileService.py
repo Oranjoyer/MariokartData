@@ -20,7 +20,6 @@ fileList = []
 # Class That Stores Data associated with a file. Formats as the proper filetype 
 class FileContainer:
     def __init__(self,name,file,path,typeOf):
-        print(typeOf)
         self.name = name
         self.path = path
         self.fileData = None
@@ -169,6 +168,8 @@ def listFilesInDir(dir,queries):
             sendMessage("ExInfo",f"\'{f}\' is a file")
 
     for q in queries:
+        if(q == "endSearch"):
+            break
         sendMessage("ExInfo",f"Current Amount of applicable entries before filtering for \'{q}\': {len(files)}")
         removeString = False
         currentQuery = q
