@@ -11,6 +11,7 @@ from templateCompare import Template
 TEMPLATE_DIR = "MKImageData"
 OUTPUT_DIR = "templatesMade"
 
+# Need to Rework these create Functions
 def createPlaces():
     for i in range(12):
         frame=getAverageFrame.getAverageFrameColor(scaleImagesToAndBack(getAverageFrame.filesToImage(getAverageFrame.filterPlace(FILES,i+1)),scale))
@@ -35,7 +36,7 @@ def createRankings(scale):
     frame = cropFrame(frame,42.89,6.5,42.89+53.47,14)
     cv2.imwrite(f"RankTemplates/Rankings{scale}.jpg",frame)
 
-# All Template Images Should be 1280x720
+# Builds Templates from Queries and Saves a JSON with the other data about it. All Images Used to Make Templates Should be 1280x720 (resize function just in case)
 def createTemplate(name,coords,queries,tolerance,path,*storeQueried):
     queries += fileService.IMAGE_EXTENSIONS
     fileList = fileService.loadFilesFromQueries(queries)
