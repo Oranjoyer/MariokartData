@@ -1,13 +1,8 @@
 # import asyncio
 import fileService
-from fileService import BASE_PATH
+from fileService import BASE_PATH, ASSETS_FOLDER, PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER,DATA_FOLDER
 import logManager
-
-ASSETS_FOLDER = "assets"
-PLACE_TEMPLATE_FOLDER = "placeTemplates"
-RACE_PROGRESS_FOLDER = "raceProgress"
-RESULT_FOLDER = "result"
-DATA_FOLDER = "dataSets"
+import templateManager
 
 TEMPLATE_FOLDERS = (PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER)
 
@@ -37,7 +32,7 @@ def obtainRaceProgressTemplates():
 # Collect Every Place Template Image from Folder
 def obtainPlaceTemplates():
     for i in range(12):
-        getAsset(PLACE_TEMPLATE_FOLDER,f"{i+1}Place.jpg")
+        templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,PLACE_TEMPLATE_FOLDER),f"{i+1}Place")
 
 # Collect Result Screen Templates
 def obtainResultsTemplates():

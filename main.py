@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 import camManager
 import logManager
-import templateCompare
 import assetManager
 from templateManager import constructTemplates
 
@@ -21,5 +20,5 @@ def main():
     init()
     return
 
-constructTemplates()
+# constructTemplates()
 main()

@@ -21,7 +21,7 @@ def colorPass(frame):
     return passF
 
 
-# # Get Average Frame but Edge Detection
+# # Get Average Frame but Edge Detection (Edge Detect Every Image)
 # def getAverageFrame(frameList):
 #     # averageFrame = np.zeros((720,1280), np.uint8)
 #     # global DEBUG
@@ -32,7 +32,7 @@ def colorPass(frame):
 #         averageFrame = cv2.addWeighted(averageFrame, 1-getWeight(i), edgeDetect(frameList[i+1]), getWeight(i),0.0)
 #     return cv2.normalize(averageFrame, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
-# Get Average Frame but Edge Detection
+# Get Average Frame but Edge Detection (Edge Detect Only final Stacked Image)
 def getAverageFrame(frameList):
     # averageFrame = np.zeros((720,1280), np.uint8)
     # global DEBUG

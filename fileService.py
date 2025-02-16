@@ -5,6 +5,13 @@ import csv
 import numpy as np
 from io import BufferedReader
 
+ASSETS_FOLDER = "assets"
+PLACE_TEMPLATE_FOLDER = "placeTemplates"
+RACE_PROGRESS_FOLDER = "raceProgress"
+RESULT_FOLDER = "result"
+DATA_FOLDER = "dataSets"
+
+
 IMAGE_EXTENSIONS=(".jpg",".gif",".png",".tiff",".svg")
 CSV_EXT = ".csv"
 PLAINTEXT_EXT = (".txt",".json",".ini",".cfg",".js",".htm",".html")
@@ -13,13 +20,14 @@ fileList = []
 # Class That Stores Data associated with a file. Formats as the proper filetype 
 class FileContainer:
     def __init__(self,name,file,path,typeOf):
+        print(typeOf)
         self.name = name
         self.path = path
         self.fileData = None
         if(type(file)==BufferedReader):
             self.fileData = file.read()
             file.close()
-        if((typeOf == "Text" )| (typeOf == "CSV")):
+        if((typeOf == "Text" ) | (typeOf == "CSV")):
             self.fileData = self.fileData.decode("utf-8")
         elif(typeOf == "Image"):
             self.fileData = np.frombuffer(self.fileData,np.uint8)
@@ -29,8 +37,6 @@ class FileContainer:
             # self.fileData = cv2.imdecode(self.fileData,cv2.IMREAD_COLOR)
         elif(typeOf == "CSV"):
             self.fileData = csv.DictReader(fileData)
-        else:
-            self.fileData = file
     def __str__(self):
         self.fileData
 
@@ -51,7 +57,7 @@ def loadFile(filePath,name):
     if(CSV_EXT in filePath[-len(CSV_EXT)]):
             fileType = "CSV"
     for extend in PLAINTEXT_EXT:
-        if(extend in filePath[-len(extend)]):
+        if(extend in filePath[-len(extend):]):
             fileType = "Text"
     if(nameFile != None):
         sendMessage("Info",f"File by name \'{name}\' already loaded. Retrieving preloaded file instead")

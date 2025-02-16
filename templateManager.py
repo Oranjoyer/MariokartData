@@ -3,8 +3,7 @@ from frameAverage import grayscale, edgeDetect,getAverageFrame
 import cv2
 import camManager
 import json
-from assetManager import ASSETS_FOLDER
-from fileService import BASE_PATH
+from fileService import BASE_PATH, ASSETS_FOLDER
 import logManager
 
 templatesList = []
@@ -77,11 +76,15 @@ class Template:
 
         return json.dumps(diction)
     
+    # Return Template Details As String
+    def __str__(self):
+        return f"Name: \'{self.name}\' | Crop Location: \'{self.cropLocation}\' | Default Tolerance: \'{self.defTolerance}\' | Folder Stored: \'{self.path}\' | Image Shape: \'{self.image.shape}\'"
     @staticmethod
     def reconstructTemplate(img, storedJson):
         if(type(storedJson)==str):
-            storedJson = json.parse(storedJson)
-        templateObj = Template(storedJson["name"],img,storedJson["cropLocation"],storedJson["tolerance"],storedJson["path"])
+            storedJson = json.loads(storedJson)
+        templateObj = Template(storedJson["name"],img,storedJson["cropLocation"],storedJson["defTolerance"],storedJson["path"])
+        return templateObj
 
 def createPlaces():
     for i in range(12):
@@ -113,9 +116,11 @@ def createTemplate(name,coords,queries,tolerance,path):
 
 # Function to load Template Images and JSONs as template objects. All templates should be saved as .jpg files or otherwise match TEMPLATE_FILETYPE and be in the same directory with same name as corresponding JSON contained in ASSETS_FOLDER as stated in assetManager.py
 def loadTemplate(folder,name):
-    tempImg = fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder+TEMPLATE_FILETYPE),name)
-    tempJSON = fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder+".json"),name)
-    templatesList.add(Template.asJson(tempImg,tempJSON))
+    tempImg = fileService.loadFile(fileService.formatStringsAsPath(folder)+name+TEMPLATE_FILETYPE,name)
+    tempJSON = fileService.loadFile(fileService.formatStringsAsPath(folder)+name+".json",name+".json")
+    loadedTemplate = Template.reconstructTemplate(tempImg.fileData,tempJSON.fileData)
+    templatesList.append(loadedTemplate)
+    sendMessage("Info",f"Template successfully loaded with data: {loadedTemplate}")
 
 def constructTemplates():
     createPlaces()
