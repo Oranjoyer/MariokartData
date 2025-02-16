@@ -1,6 +1,15 @@
 from templateCompare import template
-
+import fileService
+import templateCompare
+import averageFrame
+import cv2
+import camManager
+import json
+from fileService import BASE_PATH
+from templateCompare import CoordPair
+from templateCompare import Template
 TEMPLATE_DIR = "MKImageData"
+OUTPUT_DIR = "templatesMade"
 
 def createPlaces():
     for i in range(12):
@@ -25,8 +34,19 @@ def createRankings(scale):
         scale=""
     frame = cropFrame(frame,42.89,6.5,42.89+53.47,14)
     cv2.imwrite(f"RankTemplates/Rankings{scale}.jpg",frame)
-def scaleImagesToAndBack(images,scale):
-     imageList = []
-     for image in images:
-          imageList.append(scaleSingleToAndBack(image,scale))
-     return imageList
+
+# All Template Images Should be 1280x720
+def createTemplate(name,coords,queries,tolerance,path,*storeQueried):
+    queries += fileService.IMAGE_EXTENSIONS
+    fileList = fileService.loadFilesFromQueries(queries)
+    averageImage = averageFrame.getAverageFrame([cv2.resize(file.fileData,1280,720) for file in fileList])
+    templateImg = camManager.cropHD(averageFrame,coords)
+    templateObj = Template(name,templateImg,coords,tolerance,path)
+    cv2.imwrite(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path,name+".jpg"),templateImg)
+    templateJSON = open(fileService.formatStringsAsPath(BASE_PATH,OUTPUT_DIR,path,name+".json"),w)
+    templateJSON.write(templateObj.asJson())
+    templateJSON.close()
+    if(True not in storeQueried):
+        fileService.unloadFilesFromNameList([file.name for file in fileList])
+
+

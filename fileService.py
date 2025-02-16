@@ -1,4 +1,3 @@
-import asyncio
 import os
 import logManager
 import cv2
@@ -31,7 +30,7 @@ def sendMessage(type,message):
     logManager.sendMessage(type, "FileService", message)
 
 # Loads file into memory or retrieves file from list; returns file
-async def loadFile(filePath,name):
+def loadFile(filePath,name):
     # sendMessage("Info", "Checking for preloaded files; disregard 2 potential error messages")
     nameFile = getFileByName(name,True)
     pathFile = getFileByPath(filePath,True)
@@ -110,6 +109,12 @@ def getFileIndexByPath(path,*suppress):
         sendMessage("Error",f"No preloaded file found with path \'{path}\' returning null index instead")
     return -1
 
+
+def unloadFilesFromNameList(*fileNames):
+    sendMessage("Info",f"Removing Files With Names: {fileNames}")
+    for name in fileNames:
+        unloadFileByName(name)
+
 # Unloads file with specific name from memory
 def unloadFileByName(name):
     fileIndex = getFileIndexByName(name)
@@ -155,15 +160,17 @@ def listFilesInDir(dir,*queries):
 
 # Loads Files from Directory into the FileService based on Query list. Including a '!' as the first character and then the query wrapped in quotes marks exclusion
 def loadFilesFromList(dir, *fileList):
+    returnedList = []
     if (dir[-1]!= "/") | (dir[-1] != "\\"):
         dir.append("/")
     for f in fileList:
-        loadFile(dir+f,f)
+        returnedList.append(loadFile(dir+f,f))
+    return returnedList
 
 # Loads All Files in a Directory based on Query List. Including a '!' as the first character and then the query wrapped in quotes marks exclusion 
 def loadFilesFromQueries(dir,*queries):
     sendMessage("Info",f"Loading all files found in directory \'{dir}\' based on queries: {queries}")
-    loadFilesFromList(dir,listFilesInDir(dir,queries))
+    return loadFilesFromList(dir,listFilesInDir(dir,queries))
 
 # Formats Multiple Strings as proper Path
 def formatStringsAsPath(*str):

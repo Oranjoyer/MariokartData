@@ -24,11 +24,15 @@ def colorPass(frame):
 
 # Class to Store Data about template image
 class Template:
-    def __init__(self,name,image,cropLocation,tolerance):
+    def __init__(self,name,image,cropLocation,tolerance,path):
+        self.image = None
+        if(image == None):
+            self.image = fileService.getFileByName(name).fileData
         self.name = name
         self.image = grayscale(image)
         self.cropLocation = cropLocation
         self.defTolerance = tolerance
+        self.path = path
         if(type(self.cropLocation) == tuple):
             sendMessage("Info", f"Converting Crop Location Coords in template \'{name}\' to CoordPair Object")
             self.cropLocation = CoordPair(cropLocation)
@@ -44,12 +48,19 @@ class Template:
 
         return compareImages(self,img,CoordPair((0,0),self.image.shape),self.cropLocation)
     
+    # Returns Template Details formatted as json String
+    def asJson():
+        diction = __dict__()
+        diction.pop("image")
+
+        return json.parse(diction)
+    
 # Compare an Image With a Template Image (Not Object) (Based on 720p) (Returns Boolean)
 def compareImages(templateImg, image, templateCoords, imageCoords, tolerance):
     if(type(templateImg)==Template):
         sendMessage("Error",f"Template Object \'{templateImg.name}\' passed into function \'compareImages\' (Use Image Object or template's built in compare function). Returning False Value (Fix Ur Code)")
         return False
-    image = highPass(image)
+    image = edgeDetect(image)
 
     templateImg = cropDirect(templateImg,templateCoords)
     image = cropDirect(image,imageCoords)

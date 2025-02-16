@@ -2,12 +2,16 @@ import time
 import json
 import fileService
 from fileService import BASE_PATH
+TRACKLIST = []
 
 # Sends Log Message with 'RaceTracker' source
 def sendMessage(type,message):
     logManager.sendMessage(type, "RaceTracker", message)
 def init():
     asyncio.run(fileService.loadFile())
+
+def generateTrackList():
+    getFile
 
 
 class Track:
@@ -50,7 +54,9 @@ class JointRace:
         races = [race for race in raceInstances]
         self.startTime = min([race.startTime for race in races])
         self.endTime = max([race.endTime for race in races])
+        self.totalDuration = self.endTime - self.startTime
         self.track = raceInstances[0].track
+        self.players = [race.player for race in raceInstances]
 
         # Input Validation
         for race in raceInstances:
@@ -58,11 +64,15 @@ class JointRace:
                 sendMessage("Error","\'JointRace\' creation with races that have different track. THIS SHOULD NEVER HAPPEN")
 
 
-        self.averagePlace 
+        self.averagePlace = sum([race.place for race in raceInstances])/len(raceInstances)
+
+        def __str__(self):
+            return f"Track: {self.track.name}\nPlayers: {[player.name for player in self.players]}\nDuration: {self.totalDuration} seconds\nStart Time: {time.ctime(self.startTime)}\nEnd Time: {time.ctime(self.endTime)}"
+
 
 
     def getPlayer(self, name):
-        for race in races:
+        for race in self.races:
             if(name == race.player.name):
                 sendMessage("Info",f"Player {name} found in race on track \'{self.track}\' that took place on {time.ctime(self.startTime)} and lasted {self.endTime-self.startTime} seconds")
                 return race.player 
