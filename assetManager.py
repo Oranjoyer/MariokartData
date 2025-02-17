@@ -33,6 +33,7 @@ def obtainRaceProgressTemplates():
     templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),"Finish")
     for i in range(3):
         lapTemplateList.append(templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),f"Lap{i+1}"))
+    templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),"TrackLoad")
 
 # Collect Every Place Template Image from Folder
 def obtainPlaceTemplates():

@@ -10,12 +10,15 @@ class Activity:
     
     # Check If Activity Can Occur
     def isAvailable(self,current):
+        if(self.preReq == None):
+            return True
         if(type(current)==Activity):
             current = current.name
         return current in self.preReq
     
     # Check Whether Activity Is Occurring 
     def checkActivity(self,img,current):
+        print(f"Checking for Activity \'{self.name}\'")
         if((current != None) and not(isAvailable(current))):
             return False
         for template in self.coreTemplates:
@@ -24,5 +27,6 @@ class Activity:
         return False
 
 def collectActivities():
+    activityList.append(Activity("TrackLoad",None,[getLoadedTemplate("TrackLoad")]))
     activityList.append(Activity("Race",["TrackLoad"],[getLoadedTemplate("Go")]))
     activityList.append(Activity("RaceEnd",["Race"],[getLoadedTemplate("Finish")]))

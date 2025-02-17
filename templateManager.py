@@ -103,6 +103,8 @@ def createGo():
     createTemplate("Go",((468,236),(468+343,236+154)),["Go!"],0.1,"raceProgress")
 def createFinish():
     createTemplate("Finish",((305,236),(305+669,236+154)),("Finish","Line"),0.15,"raceProgress")
+def createTrackLoad():
+    createTemplate("TrackLoad",((1078,620),(1078+63,620+84)),("TrackLoad",),0.1,"raceProgress")
 def createCoins():
     for i in range(11):
         createTemplate(f"{i}Coin",((90,647),(90+55,647+50)),[f"{i}Coin"],0.15,"raceData")
@@ -151,6 +153,7 @@ def constructTemplates():
     createFinish()
     createLaps()
     createCoins()
+    createTrackLoad()
 
 
 

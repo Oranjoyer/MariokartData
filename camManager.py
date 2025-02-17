@@ -1,6 +1,6 @@
 import sys
 import cv2
-from cv2_enumerate_cameras import enumerate_cameras
+from enumCams import enumerate_cameras
 import logManager
 import numpy as np
 from imageMgt import cropDirect, cropPercent,cropHD
@@ -18,16 +18,13 @@ def init():
     CAPTURE_METHOD=getCaptureMethod()
     sendMessage("Info",f"Capture Method Set to \'{CAPTURE_METHOD}\' on \'{sys.platform}\' System")
     # videoTest = cv2.VideoCapture("mkVid.mkv")
-    videoTest = cv2.VideoCapture(0)
-    videoTest.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    videoTest.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
     enumCams()
 
 # Gets Capture Method Based on OS
 def getCaptureMethod():
     if(sys.platform.lower()=="linux"):
-        return cv2.CAP_ANY
+        return cv2.CAP_V4L2
     elif(sys.platform.lower()=="windows"):
         return cv2.CAP_DSHOW
 # Send Messages to Logs
@@ -49,7 +46,7 @@ def createCameraSource(index, name):
 def updateCameraImages():
     for camera in cameras:
         if(camera.cameraActive):
-            asyncio.run(camera.updateImage())
+            camera.updateImage()
 
 # Class That Manages VideoCapture objects and can remember camera indexes without blocking cameras when not in use
 class CameraSource:
@@ -59,8 +56,8 @@ class CameraSource:
         self.captureObject = None
         self.sourcesUsing = []
         self.cameraActive = False
-        resolution = (720,1280)
-        self.currentImage = np.empty(resolution)
+        self.resolution = (720,1280)
+        self.currentImage = np.empty(self.resolution)
     
     # Sets Whether The Camera Is Active
     def setActivity(self, source, active):
@@ -77,14 +74,21 @@ class CameraSource:
 
     # Initializes Camera if not active yet
     def activateCamera(self):
-        if(self.captureObject != None):
-            sendMessage("Warning", f"Camera \'{name}\' is Already Activated")
+        if(self.captureObject != None and not(self.captureObject.isOpened())):
+            sendMessage("Warning", f"Camera \'{self.name}\' is Already Activated")
             return
         try:
-            self.captureObject = cv2.VideoCapture(self.index,CAPTURE_METHOD)
+            if(self.captureObject == None):
+                self.captureObject = cv2.VideoCapture(self.index,CAPTURE_METHOD)
+                ret, image = self.captureObject.read()
+                print(ret)
+                # self.captureObject = cv2.VideoCapture(0,CAPTURE_METHOD)
+
+            else:
+                self.captureObject.open()
             self.captureObject.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[1])
             self.captureObject.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[0])
-            sendMessage("Info", f"Camera \'{name}\' Successfully Activated")
+            sendMessage("Info", f"Camera \'{self.name}\' Successfully Activated")
             self.cameraActive = True
         except Exception as e:
             print(e)
@@ -100,11 +104,11 @@ class CameraSource:
     
     # Deactivates Camera if Initialized
     def deactivateCamera(self):
-        if(self.captureObject==None):
+        if(not(self.captureObject.isOpened())):
             sendMessage(f"Warning", f"Camera \'{self.name}\' is Already Deactivated")
             return
         self.captureObject.release()
-        self.captureObject = None
+        # self.captureObject = None
         self.cameraActive = False
 
 # Class which grabs image from camera. Optionally pass 2d tuple of (x1 y1) and (x2 y2) pairs
