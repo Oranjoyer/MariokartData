@@ -17,12 +17,17 @@ def init():
     global CAPTURE_METHOD
     CAPTURE_METHOD=getCaptureMethod()
     sendMessage("Info",f"Capture Method Set to \'{CAPTURE_METHOD}\' on \'{sys.platform}\' System")
+    # videoTest = cv2.VideoCapture("mkVid.mkv")
+    videoTest = cv2.VideoCapture(0)
+    videoTest.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    videoTest.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    
     enumCams()
 
 # Gets Capture Method Based on OS
 def getCaptureMethod():
     if(sys.platform.lower()=="linux"):
-        return cv2.CAP_V4L2
+        return cv2.CAP_ANY
     elif(sys.platform.lower()=="windows"):
         return cv2.CAP_DSHOW
 # Send Messages to Logs
@@ -61,8 +66,8 @@ class CameraSource:
     def setActivity(self, source, active):
         if (source not in self.sourcesUsing) & active:
             self.sourcesUsing.append(source)
-            if(self.sourcesUsing.len()==1):
-                activateCamera()
+            if(len(self.sourcesUsing)==1):
+                self.activateCamera()
             return
         if (source in self.sourcesUsing) & active == False:
             self.sourcesUsing.remove(source)
@@ -71,31 +76,32 @@ class CameraSource:
             return
 
     # Initializes Camera if not active yet
-    async def activateCamera(self):
+    def activateCamera(self):
         if(self.captureObject != None):
-            sendMessage("Warning", "Camera \'{name}\' is Already Activated")
+            sendMessage("Warning", f"Camera \'{name}\' is Already Activated")
             return
         try:
             self.captureObject = cv2.VideoCapture(self.index,CAPTURE_METHOD)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[1])
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[0])
-            sendMessage(f"Info", "Camera \'{name}\' Successfully Activated")
+            self.captureObject.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[1])
+            self.captureObject.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[0])
+            sendMessage("Info", f"Camera \'{name}\' Successfully Activated")
             self.cameraActive = True
-        except:
-            sendMessage("Error", "Camera \'{name}\' Unavailable For Activation")
+        except Exception as e:
+            print(e)
+            sendMessage("Error", f"Camera \'{self.name}\' Unavailable For Activation")
             return
-    # Non-Blocking Function in Order to Retrieve Latest Image from The Linked Camera
-    async def updateImage(self):
+    # Function in Order to Retrieve Latest Image from The Linked Camera
+    def updateImage(self):
         if(self.cameraActive):
             self.captureObject.read()
-            sendMessage("ExInfo","Image Updated at Camera Source \'{name}\'")
+            sendMessage("ExInfo",f"Image Updated at Camera Source \'{name}\'")
             return
-        sendMessage("Error","Camera Source \'{name}\' Not Active Before Attempting Image Update")
+        sendMessage("Error",f"Camera Source \'{self.name}\' Not Active Before Attempting Image Update")
     
     # Deactivates Camera if Initialized
     def deactivateCamera(self):
         if(self.captureObject==None):
-            sendMessage(f"Warning", "Camera \'{name}\' is Already Deactivated")
+            sendMessage(f"Warning", f"Camera \'{self.name}\' is Already Deactivated")
             return
         self.captureObject.release()
         self.captureObject = None
@@ -107,10 +113,11 @@ class VideoSource:
         self.name = name
         self.camera = camera
         self.cropPercent = cropPercent
-
+    def setActivity(self,active):
+        self.camera.setActivity(self,active)
     # Get Latest Image from CameraSource Object
     def getImage(self):
         if(self.camera.cameraActive == False):
-            sendMessage("Warning", "Last Camera Image Retrieved from Camera \'{camera.name}\' While Camera is Not Active. Image Will be Blank or Stale")
+            sendMessage("Warning", f"Last Camera Image Retrieved from Camera \'{camera.name}\' While Camera is Not Active. Image Will be Blank or Stale")
         return cropPercent(camera.currentImage,self.cropPercent(cropPercent))
     

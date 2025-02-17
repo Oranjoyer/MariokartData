@@ -7,7 +7,7 @@ import logManager
 import assetManager
 import raceTracker
 from templateManager import constructTemplates
-
+from playerManager import Player
 INIT = False
 
 # Executes Init Functions Of all Modules
@@ -20,6 +20,7 @@ def init():
 
 def main():
     init()
+    Player.createPlayer("Grant",camManager.cameras[0],((0,0),(100,100)))
     return
 
 # constructTemplates()

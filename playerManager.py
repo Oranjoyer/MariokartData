@@ -1,13 +1,17 @@
 import json
 from activityManager import activityList
-from raceTracker import IndivRace
+from raceTracker import IndivRace, trackList
+from raceTracker import EventDetails
+from templateManager import PLACES_FORMATTED
+from camManager import VideoSource
 import time
 # Class that manages each player and their data
 playerList = []
 class Player:
-    def __init__(name,vSource):
+    def __init__(self,name,vSource):
         self.name = name
         self.vSource = vSource
+        vSource.setActivity(True)
 
         # Default Initialization of Player's Combo, will be changed post Init with gui
         self.character = "Mario"
@@ -21,10 +25,13 @@ class Player:
         self.vr = -1
         self.placesRec = []
         self.teamColor = None
-        self.inRace = False
         self.currentRace = None
 
         self.raceList = []
+    def disablePlayer(self):
+        self.vSource.setActivity(False)
+    def enablePlayer(self):
+        self.vSource.setActivity(False)
     def getImage(self):
         return self.vSource.getImage()
     def scanActivity(self):
@@ -37,6 +44,8 @@ class Player:
         if(self.currentActivity.name=="TrackLoad"):
             if(self.currentRace == None):
                 track = detectTrack(self.getImage())
+                while(track == None):
+                    track = detectTrack(self.getImage())
 
                 self.currentRace = IndivRace(self,track)
         elif(self.currentActivity.name=="Race"):
@@ -52,8 +61,18 @@ class Player:
                 self.currentRace.raceDuration = self.currentRace.endTime-self.currentRace.startTime
             # Get Final Placement Reported 
             if(self.currentRace.finalPlace == 0):
-                self.currentRace.finalPlace = self.currentRace.checkPlace()
+                finalizedPlacement=self.currentRace.checkPlace()
+                if(finalizedPlacement != 0):
+                    self.currentRace.finalPlace = finalizedPlacement
+                    self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{self.currentRace.track.name}\' with {PLACES_FORMATTED[finalizedPlacement-1]} place"))
+    @staticmethod
+    def createPlayer(name,camera,crop):
+        source = VideoSource(name,camera,crop)
+        return Player(name,source)
 
+def detectTrack(image):
+    # Just Waiting for track detection modules
+    return trackList[0]
 def createPlayerFromDict(diction):
     if(type(diction)!=dict & type(diction) == str):
         sendMessage("Info","String passed into \'createPlayer\' function. Attempting to parse as JSON")

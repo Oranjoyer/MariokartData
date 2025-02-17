@@ -117,7 +117,6 @@ def createTemplate(name,coords,queries,tolerance,path):
     
     # averageImage = getAverageFrame([cv2.resize(file.fileData,(1280,720)) for file in fileList])
     averageImage = getAverageFrame(imageList)
-    # print(averageImage.shape)
     templateImg = averageImage
     templateImg = cropHD(averageImage,coords)
     templateObj = Template(name,templateImg,coords,tolerance,path)

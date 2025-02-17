@@ -30,16 +30,11 @@ class FileContainer:
             file.close()
         if((typeOf == "Text")):
             self.fileData = self.fileData.decode("utf-8")
-            print(self.fileData)
         elif(typeOf == "Image"):
             self.fileData = np.frombuffer(self.fileData,np.uint8)
             self.fileData = cv2.imdecode(self.fileData, cv2.IMREAD_COLOR)
-            # cv2.imshow("test",self.fileData)
-            # cv2.waitKey(0)
-            # self.fileData = cv2.imdecode(self.fileData,cv2.IMREAD_COLOR)
         if(typeOf == "CSV"):
             self.fileData = csv.DictReader(open(path,'r'),delimiter=",")
-            # print([f for f in self.fileData])
     def __str__(self):
         self.fileData
 
