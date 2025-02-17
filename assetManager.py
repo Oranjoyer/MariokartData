@@ -3,10 +3,10 @@ import fileService
 from fileService import BASE_PATH, ASSETS_FOLDER, PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER,DATA_FOLDER
 import logManager
 import templateManager
-
+from templateManager import placeTemplateList, lapTemplateList
 
 TEMPLATE_FOLDERS = (PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER)
-placeTemplateList = []
+
 
 
 # Simplifies Function to Retrieve Asset files from the filesystem
@@ -32,7 +32,7 @@ def obtainRaceProgressTemplates():
     templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),"Go")
     templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),"Finish")
     for i in range(3):
-        templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),f"Lap{i+1}")
+        lapTemplateList.append(templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_PROGRESS_FOLDER),f"Lap{i+1}"))
 
 # Collect Every Place Template Image from Folder
 def obtainPlaceTemplates():

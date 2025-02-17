@@ -11,8 +11,15 @@ templatesList = []
 PLACES_FORMATTED = ("1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th")
 REFERENCE_DIR = "MKImageData"
 
+ITEMS = ("Coin","Red","Green","Shroom","Banana","Boomerang","GoldShroom","Horn","Bullet","Star","Bomb","Inker","Shock","Plant","Boo","Fire","Blue","Crazy8","None")
+ITEMS_WITH_MULTI = {"Red","Green","Shroom","Banana"}
+
 OUTPUT_DIR = "templatesMade"
 TEMPLATE_FILETYPE = ".jpg"
+
+placeTemplateList = []
+lapTemplateList = []
+coinTemplateList = []
 
 # Sends Log Message with 'TemplateManager' source
 def sendMessage(type,message):
@@ -37,14 +44,14 @@ def bulkCompare(templateList,img,tolerance):
     index = 0
     for temp in templateList:
         comparison = temp.compareWithImage(img,tolerance)
-        if(comparison[0]):
+        if(comparison[0] and (comparison[1]>maxRecog[1])):
             maxRecog = temp, comparison[1]
         index += 1
     if(maxRecog[1]==0):
         sendMessage("ExInfo","No Matching template found in list")
     else:
         sendMessage("ExInfo",f"Matching template,\'{maxRecog[0].name}\'")
-    return maxRecog, index
+    return maxRecog + (index,)
 
 # Class to Store Data about template image
 class Template:
@@ -96,6 +103,9 @@ def createGo():
     createTemplate("Go",((468,236),(468+343,236+154)),["Go!"],0.1,"raceProgress")
 def createFinish():
     createTemplate("Finish",((305,236),(305+669,236+154)),("Finish","Line"),0.15,"raceProgress")
+def createCoins():
+    for i in range(11):
+        createTemplate(f"{i}Coin",((90,647),(90+55,647+50)),[f"{i}Coin"],0.15,"raceData")
 
 # Builds Templates from Queries and Saves a JSON with the other data about it. All Images Used to Make Templates Should be 1280x720 (resize function just in case)
 def createTemplate(name,coords,queries,tolerance,path):
@@ -104,7 +114,6 @@ def createTemplate(name,coords,queries,tolerance,path):
     imageList = []
     for f in fileList:
         imageList.append(cv2.resize(f.fileData,(1280,720)))
-        # print(f.fileData)
     
     # averageImage = getAverageFrame([cv2.resize(file.fileData,(1280,720)) for file in fileList])
     averageImage = getAverageFrame(imageList)
@@ -136,12 +145,13 @@ def getLoadedTemplate(name):
             return template
     sendMessage("Error",f"Loaded Template by Name \'{name}\' not found. Returning null value instead")
     return None
-    
+
 def constructTemplates():
     createPlaces()
     createGo()
     createFinish()
     createLaps()
+    createCoins()
 
 
 

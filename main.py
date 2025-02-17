@@ -5,6 +5,7 @@ import cv2
 import camManager
 import logManager
 import assetManager
+import raceTracker
 from templateManager import constructTemplates
 
 INIT = False
@@ -13,6 +14,7 @@ INIT = False
 def init():
     camManager.init()
     assetManager.init()
+    raceTracker.init()
     global INIT
     INIT = True
 

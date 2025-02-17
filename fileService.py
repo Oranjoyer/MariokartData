@@ -23,19 +23,23 @@ class FileContainer:
         self.name = name
         self.path = path
         self.fileData = None
+        if(file==None):
+            self.fileData = open(path, r)
         if(type(file)==BufferedReader):
             self.fileData = file.read()
             file.close()
-        if((typeOf == "Text" ) | (typeOf == "CSV")):
+        if((typeOf == "Text")):
             self.fileData = self.fileData.decode("utf-8")
+            print(self.fileData)
         elif(typeOf == "Image"):
             self.fileData = np.frombuffer(self.fileData,np.uint8)
             self.fileData = cv2.imdecode(self.fileData, cv2.IMREAD_COLOR)
             # cv2.imshow("test",self.fileData)
             # cv2.waitKey(0)
             # self.fileData = cv2.imdecode(self.fileData,cv2.IMREAD_COLOR)
-        elif(typeOf == "CSV"):
-            self.fileData = csv.DictReader(fileData)
+        if(typeOf == "CSV"):
+            self.fileData = csv.DictReader(open(path,'r'),delimiter=",")
+            # print([f for f in self.fileData])
     def __str__(self):
         self.fileData
 
@@ -53,7 +57,7 @@ def loadFile(filePath,name):
     for imgExt in IMAGE_EXTENSIONS:
         if(imgExt == filePath[-len(imgExt):]):
             fileType = "Image"
-    if(CSV_EXT in filePath[-len(CSV_EXT)]):
+    if(CSV_EXT in filePath[-len(CSV_EXT):]):
             fileType = "CSV"
     for extend in PLAINTEXT_EXT:
         if(extend in filePath[-len(extend):]):

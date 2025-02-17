@@ -1,52 +1,122 @@
 import time
 import json
+import csv
 import fileService
 from fileService import BASE_PATH
-TRACKLIST = []
+from templateManager import placeTemplateList, lapTemplateList,coinTemplateList
+from templateManager import PLACES_FORMATTED
+from templateManager import bulkCompare
+from io import StringIO
+trackList = []
+
 
 # Sends Log Message with 'RaceTracker' source
 def sendMessage(type,message):
     logManager.sendMessage(type, "RaceTracker", message)
 def init():
-    asyncio.run(fileService.loadFile())
+    generateTrackList()
 
 def generateTrackList():
-    getFile
+    trackStrats = fileService.getFileByName("trackStrats.csv").fileData
+    for trackDict in trackStrats:
+        trackList.append(Track(trackDict["course_num"],trackDict["course_name"],trackDict["course_type"],trackDict["best_start"],trackDict["description"]))
+
+
+
 
 
 class Track:
-    def __init__(name,trackType,strategy,bestStartSpot):
+    def __init__(self,trackNum,name,trackType,bestStartSpot,description):
+        self.trackNum = trackNum
         self.name = name
         self.trackType = trackType
-        self.strategy = strategy
         self.bestStartSpot = bestStartSpot
-class eventDetails:
-    def __init__(self,timeOccur, raceDict, description):
-        self.timeOccur = time.ctime(raceDict["endTime"])
-        self.timeElapsed = raceDict["endTime"]-raceDict["startTime"]
-        self.conditions = raceDict
         self.description = description
 
+class EventDetails:
+    def __init__(self, raceDict, description):
+        self.timeOccur = time.ctime(raceDict["currentTime"])
+        self.timeElapsed = raceDict["currentTime"]-raceDict["startTime"]
+        self.conditions = raceDict
+        self.description = description
+    
+    @staticmethod
+    def reportEvent(race,description):
+        sendMessage(description)
+        return EventDetails(race.outputCurrentAsDict(),description)
+
 class IndivRace:
-    def __init__(self,player,track, start):
+    def __init__(self,player,track):
         self.player = player
         self.track = track
-        self.startTime = start
-        self.endTime = None
-        self.raceDuration = end-start
+        self.startTime = 0
+        self.currentTime = 0
+        self.endTime = 0
+        self.raceDuration = 0
         self.eventLog = []
+        self.finalPlace = 0
 
         # Mid Race Info
         self.items = (None,None)
         self.lap = 0
         self.coins = 0
-        self.track = None
+        self.hitsDetected = 0
         self.place = 0
+        self.totalCoins = 0
+
     # Output Current Race Conditons As Json
     def outputCurrentAsDict(self):
         dictionary = __dict__()
         dictionary = dictionary.pop("eventLog")
         return dictionary
+    # Update Race Time
+    def updateTime():
+        self.currentTime = time.time()
+        self.raceDuration = self.currentTime - self.startTime
+    # Obtain Current Race Conditions
+    def scanRace(self):
+        self.scanPlace()
+        self.scanLaps()
+        self.scanCoins()
+
+    def checkPlace(self):
+        matchedPlaceTemplate = bulkCompare(placeTemplateList,self.player.getImage(),0)
+        placeMatch = matchedPlace[2]+1
+        return matchedPlaceTemplate,placeMatch
+        
+    # Check Current Screen for Change in Placement
+    def scanPlace(self):
+        matchedPlaceTemplate,placeMatch = self.checkPlace()
+        if((matchedPlace[0] != None) and (placeMatch != self.place)):
+            self.place = placeMatch
+            eventString = f"Player \'{self.player.name}\' moved to {PLACES_FORMATTED[placeMatch-1]} place"
+            self.eventLog.append(EventDetails.reportEvent(self,eventString))
+
+    def scanLaps(self):
+        if(not((self.lap >= 3) and (self.track.name == "Baby Park")) and (self.lap >= len(lapTemplateList))):
+            return
+        nextLapTemplate = lapTemplateList[self.lap]
+        if(nextLapTemplate.compareWithImage(self.player.getImage(),0)):
+            self.lap += 1
+            self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' moved to lap {self.lap}"))
+    
+    def scanCoins(self):
+        matchedPlaceTemplate = bulkCompare(coinTemplateList,self.player.getImage(),0)
+        coinMatch = matchedPlace[2]
+        if((matchedPlace[0] != None) and (coinMatch != self.coins)):
+            if(coinMatch < self.coins):
+                self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' lost {self.coins - coinMatch} coins from being hit or falling off"))
+                self.hitsDetected += 1
+            else:
+                self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' gained {coinMatch-self.coins} coins"))
+            self.coins = coinMatch
+            if(self.coins == 0):
+                self.eventLog.append(EventDetails.reportEvent(self,f"Coin count for Player \'{self.player.name}\' is 0. Hits cannot be detected until player collects coins"))
+
+        
+
+            
+
 
 # Class Which calculates values related to a race that includes multiple players
 class JointRace:
