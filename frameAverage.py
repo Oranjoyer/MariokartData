@@ -56,6 +56,6 @@ def getAverageFrameColor(frameList):
     for i in range(len(frameList)-1):
         averageFrame = cv2.addWeighted(averageFrame, 1-getWeight(i), frameList[i+1], getWeight(i),0.0)
             # cv2.destroyWindow("Debug")
-    # return cv2.normalize(averageFrame, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    return averageFrame
+    return cv2.normalize(averageFrame, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    # return averageFrame
 

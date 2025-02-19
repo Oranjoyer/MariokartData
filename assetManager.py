@@ -1,9 +1,9 @@
 # import asyncio
 import fileService
-from fileService import BASE_PATH, ASSETS_FOLDER, PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER,DATA_FOLDER
+from fileService import BASE_PATH, ASSETS_FOLDER, PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER,DATA_FOLDER,RACE_DATA_FOLDER
 import logManager
 import templateManager
-from templateManager import placeTemplateList, lapTemplateList
+from templateManager import placeTemplateList, lapTemplateList, coinTemplateList
 
 TEMPLATE_FOLDERS = (PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER)
 
@@ -26,6 +26,7 @@ def obtainTemplateAssets():
     obtainPlaceTemplates()
     obtainRaceProgressTemplates()
     obtainResultsTemplates()
+    obtainCoinTemplates()
 
 # Collect Every Race Progress Indicator Template from Folder
 def obtainRaceProgressTemplates():
@@ -41,6 +42,12 @@ def obtainPlaceTemplates():
         placeTemplateList.append(templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,PLACE_TEMPLATE_FOLDER),f"{i+1}Place"))
     sendMessage("Info",f"Loaded Place Templates Into Memory {[t.name for t in placeTemplateList]}")
 
+# Collect Every Coin Template Image from Folder
+def obtainCoinTemplates():
+    for i in range(11):
+        coinTemplateList.append(templateManager.loadTemplate(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,RACE_DATA_FOLDER),f"{i}Coin"))
+    sendMessage("Info",f"Loaded Coin Templates Into Memory {[t.name for t in placeTemplateList]}")
+
 # Collect Result Screen Templates
 def obtainResultsTemplates():
     getAsset(RESULT_FOLDER,"TeamPoints.jpg")
@@ -52,4 +59,5 @@ def getTrackCSV():
 # Initializes all needed resources for this module
 def init():
     obtainTemplateAssets()
+    getAsset(".","placeholder.png")
     getTrackCSV()

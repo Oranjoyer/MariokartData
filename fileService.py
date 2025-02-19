@@ -10,6 +10,7 @@ PLACE_TEMPLATE_FOLDER = "placeTemplates"
 RACE_PROGRESS_FOLDER = "raceProgress"
 RESULT_FOLDER = "result"
 DATA_FOLDER = "dataSets"
+RACE_DATA_FOLDER = "raceData"
 
 
 IMAGE_EXTENSIONS=(".jpg",".gif",".png",".tiff",".svg")

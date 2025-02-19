@@ -2,10 +2,13 @@ import time
 import json
 import csv
 import fileService
+import logManager
 from fileService import BASE_PATH
 from templateManager import placeTemplateList, lapTemplateList,coinTemplateList
 from templateManager import PLACES_FORMATTED
 from templateManager import bulkCompare
+import statistics
+import cv2
 from io import StringIO
 trackList = []
 
@@ -42,7 +45,7 @@ class EventDetails:
     
     @staticmethod
     def reportEvent(race,description):
-        sendMessage(description)
+        sendMessage("Info",description)
         return EventDetails(race.outputCurrentAsDict(),description)
 
 class IndivRace:
@@ -58,16 +61,21 @@ class IndivRace:
 
         # Mid Race Info
         self.items = (None,None)
-        self.lap = 0
+        self.lap = 1
         self.coins = 0
         self.hitsDetected = 0
         self.place = 0
         self.totalCoins = 0
 
+        self.voteLim = 5
+        self.coinVote = tuple(0 for _ in range(self.voteLim))
+
+    def reportEvent(self,description):
+        self.eventLog.append(EventDetails.reportEvent(self,description))
     # Output Current Race Conditons As Json
     def outputCurrentAsDict(self):
-        dictionary = __dict__()
-        dictionary = dictionary.pop("eventLog")
+        dictionary = self.__dict__
+        # dictionary = dictionary.pop("eventLog")
         return dictionary
     # Update Race Time
     def updateTime():
@@ -81,41 +89,60 @@ class IndivRace:
 
     def checkPlace(self):
         matchedPlaceTemplate = bulkCompare(placeTemplateList,self.player.getImage(),0)
-        placeMatch = matchedPlace[2]+1
+        placeMatch = matchedPlaceTemplate[2]
         return matchedPlaceTemplate,placeMatch
         
     # Check Current Screen for Change in Placement
     def scanPlace(self):
         matchedPlaceTemplate,placeMatch = self.checkPlace()
-        if((matchedPlace[0] != None) and (placeMatch != self.place)):
+        if((matchedPlaceTemplate[0] != None) and (placeMatch != self.place)):
             self.place = placeMatch
-            eventString = f"Player \'{self.player.name}\' moved to {PLACES_FORMATTED[placeMatch-1]} place"
+            eventString = f"Player \'{self.player.name}\' moved to {PLACES_FORMATTED[placeMatch]} place"
             self.eventLog.append(EventDetails.reportEvent(self,eventString))
 
     def scanLaps(self):
-        if(not((self.lap >= 3) and (self.track.name == "Baby Park")) and (self.lap >= len(lapTemplateList))):
+        playerImg = self.player.vSource.getImage()
+        if(not((self.lap >= 3) and (self.track != None and self.track.name == "Baby Park")) and (self.lap >= len(lapTemplateList))):
             return
         nextLapTemplate = lapTemplateList[self.lap]
-        if(nextLapTemplate.compareWithImage(self.player.getImage(),0)):
+        nextCompare = nextLapTemplate.compareWithImage(self.player.getImage(),0)
+
+        currentTemplate = lapTemplateList[self.lap-1]
+        if(nextCompare[0] and (nextCompare[1] > currentTemplate.compareWithImage(self.player.getImage(),0)[1])):
             self.lap += 1
             self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' moved to lap {self.lap}"))
     
     def scanCoins(self):
-        matchedPlaceTemplate = bulkCompare(coinTemplateList,self.player.getImage(),0)
-        coinMatch = matchedPlace[2]
-        if((matchedPlace[0] != None) and (coinMatch != self.coins)):
-            if(coinMatch < self.coins):
-                self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' lost {self.coins - coinMatch} coins from being hit or falling off"))
-                self.hitsDetected += 1
-            else:
-                self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' gained {coinMatch-self.coins} coins"))
-            self.coins = coinMatch
-            if(self.coins == 0):
-                self.eventLog.append(EventDetails.reportEvent(self,f"Coin count for Player \'{self.player.name}\' is 0. Hits cannot be detected until player collects coins"))
+        playerImg = self.player.getImage()
+        lowCoin = max(self.coins-3, 0)
+        availCoins = (coinTemplateList[lowCoin],) + tuple(coinTemplateList[self.coins:])
 
+
+        coinMatch = bulkCompare(availCoins,playerImg,0) # returns (Template, loc, indexInList)
+        averageLoc = coinMatch[3]
         
+        if(coinMatch!=None and coinMatch[2]==0):
+            self.coinVote = addToLine(lowCoin,self.coinVote,self.voteLim)
+        elif(coinMatch!=None and coinMatch[2]>0):
+            self.coinVote = addToLine(self.coins + coinMatch[2]-1,self.coinVote,self.voteLim)
+        # print(str(self.coinVote[0]) + f"Ave Loc: {averageLoc}")
 
-            
+        if(self.coinVote[0] != self.coins and self.coinVote.count(self.coinVote[0]) > self.voteLim/2):
+            if(self.coinVote[0]<self.coins):
+                self.coins = self.coinVote[0]
+                self.hitsDetected +=1
+                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch[1]}")
+            elif(self.coinVote[0] > self.coins):
+                self.coins = self.coinVote[0]
+                self.reportEvent(f"Player \'{self.player.name}\' coins increased to {self.coins}: {coinMatch[1]}")
+
+
+
+def allSame(listItems):
+    if(all(item == listItems[0] for item in listItems)):
+        return listItems[0]
+def addToLine(elem,items,lim):
+    return (elem,) + (items[:lim]) 
 
 
 # Class Which calculates values related to a race that includes multiple players

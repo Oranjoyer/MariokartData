@@ -1,12 +1,16 @@
 import fileService
 from frameAverage import grayscale, edgeDetect,getAverageFrame
 import cv2
-from imageMgt import cropHD
+from imageMgt import cropHD, cropDirect
 import json
 from fileService import BASE_PATH, ASSETS_FOLDER
 import logManager
+import numpy as np
+import statistics
 
 templatesList = []
+
+FLIP = True
 
 PLACES_FORMATTED = ("1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th")
 REFERENCE_DIR = "MKImageData"
@@ -14,7 +18,7 @@ REFERENCE_DIR = "MKImageData"
 ITEMS = ("Coin","Red","Green","Shroom","Banana","Boomerang","GoldShroom","Horn","Bullet","Star","Bomb","Inker","Shock","Plant","Boo","Fire","Blue","Crazy8","None")
 ITEMS_WITH_MULTI = {"Red","Green","Shroom","Banana"}
 
-OUTPUT_DIR = "templatesMade"
+OUTPUT_DIR = "assets"
 TEMPLATE_FILETYPE = ".jpg"
 
 placeTemplateList = []
@@ -24,6 +28,7 @@ coinTemplateList = []
 # Sends Log Message with 'TemplateManager' source
 def sendMessage(type,message):
     logManager.sendMessage(type, "TemplateManager", message)
+
 # Compare an Image With a Template Image (Not Object) (Based on 720p) (Returns Boolean)
 def compareImages(templateImg, image, templateCoords, imageCoords, tolerance):
     if(type(templateImg)==Template):
@@ -34,24 +39,31 @@ def compareImages(templateImg, image, templateCoords, imageCoords, tolerance):
     templateImg = cropDirect(templateImg,templateCoords)
     image = cropDirect(image,imageCoords)
 
-    res = cv2.matchTemplate(frame,place,cv2.TM_CCOEFF_NORMED)
+    res = cv2.matchTemplate(image,templateImg,cv2.TM_CCOEFF_NORMED)
     loc = np.max(res)
     if(loc>tolerance):
-        return true, loc
+        sendMessage("ExInfo",f"Match found with \'{loc}\' similarity")
+        return True, loc
+    # print(loc)
+    return False, 0
     
 def bulkCompare(templateList,img,tolerance):
-    maxRecog = None, 0
+    sendMessage("ExInfo",f"Checking template List: {templateList}")
+    locList=[]
+    maxRecog = None, 0,-1
     index = 0
     for temp in templateList:
-        comparison = temp.compareWithImage(img,tolerance)
+        comparison = temp.compareWithImage(img,tolerance) # comparison -> bool, loc
+        # print(comparison)
+        locList.append(comparison[1])
         if(comparison[0] and (comparison[1]>maxRecog[1])):
-            maxRecog = temp, comparison[1]
+            maxRecog = (temp, comparison[1],index)
         index += 1
     if(maxRecog[1]==0):
         sendMessage("ExInfo","No Matching template found in list")
     else:
         sendMessage("ExInfo",f"Matching template,\'{maxRecog[0].name}\'")
-    return maxRecog + (index,)
+    return maxRecog + (locList,)
 
 # Class to Store Data about template image
 class Template:
@@ -67,14 +79,13 @@ class Template:
         if(((self.cropLocation[1][0]-self.cropLocation[0][0]) != image.shape[1]) | ((self.cropLocation[1][1]-self.cropLocation[0][1]) != image.shape[0])):
             sendMessage("Warning",f"Template \'{name}\' initialized with different shape than crop coordinate shape")
     def compareWithImage(self,img,tolerance):
-        img = edgeDetect(img)
-        if(tolerance > 0):
+        if(tolerance <= 0):
             tolerance = self.defTolerance
-        if(img.shape != (1280,720)):
-            sendMessage("Info", "Resizing comparison image to 1280x720")
+        if(img.shape[:2] != (720,1280)):
+            sendMessage("Debug", "Resizing comparison image to 1280x720")
             img = cv2.resize(img,(1280,720))
-
-        return compareImages(self,img,self.croplocation((0,0),self.image.shape),self.cropLocation)
+        comparisonResults = compareImages(self.image,img,((0,0),(self.image.shape[1],self.image.shape[0])),self.cropLocation,tolerance)
+        return comparisonResults
     
     # Returns Template Details formatted as json String
     def asJson(self):
@@ -98,7 +109,7 @@ def createPlaces():
         createTemplate(f"{i+1}Place",((1086,568),((1086+130),(568+121))),("Race","Drive","!PlaceChange",PLACES_FORMATTED[i]),0.15,"placeTemplates")
 def createLaps():
     for i in range(3):
-        createTemplate(f"Lap{i+1}",((153,644),(153+130,644+51)),[f"Lap{i+1}"],0.15,"raceProgress")
+        createTemplate(f"Lap{i+1}",((207,652),(207+24,652+38)),[f"Lap{i+1}"],0.5,"raceProgress")
 def createGo():
     createTemplate("Go",((468,236),(468+343,236+154)),["Go!"],0.1,"raceProgress")
 def createFinish():
@@ -107,7 +118,18 @@ def createTrackLoad():
     createTemplate("TrackLoad",((1078,620),(1078+63,620+84)),("TrackLoad",),0.1,"raceProgress")
 def createCoins():
     for i in range(11):
-        createTemplate(f"{i}Coin",((90,647),(90+55,647+50)),[f"{i}Coin"],0.15,"raceData")
+        coinTol = 0.65
+        if(i==6):
+            coinTol = 0.3
+        elif(i==7):
+            coinTol = 0.75
+        elif(i==9):
+            coinTol = 0.77
+        elif(i==8):
+            coinTol = 0.6
+        elif(i==5):
+            coinTol = .75
+        createTemplate(f"{i}Coin",((100,652),(100+45,652+35)),[f"{i}Coin"],coinTol,"raceData")
 
 # Builds Templates from Queries and Saves a JSON with the other data about it. All Images Used to Make Templates Should be 1280x720 (resize function just in case)
 def createTemplate(name,coords,queries,tolerance,path):

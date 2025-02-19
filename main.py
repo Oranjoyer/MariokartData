@@ -6,30 +6,55 @@ import camManager
 import logManager
 import assetManager
 import raceTracker
+import activityManager
+import templateManager
 from templateManager import constructTemplates
 from playerManager import Player
+from frameAverage import edgeDetect
 from threading import Thread
 INIT = False
 
 # Executes Init Functions Of all Modules
 def init():
-    camManager.init()
     assetManager.init()
+    camManager.init()
     raceTracker.init()
+    activityManager.init()
     global INIT
     INIT = True
 def constantCamUpdate():
     while True:
         camManager.updateCameraImages()
 def main():
-    thread = Thread(target=constantCamUpdate)
-    thread.start
     init()
-    player = Player.createPlayer("Grant",camManager.cameras[0],((0,0),(100,100)))
+    thread = Thread(target=constantCamUpdate)
+    thread.start()
+    players = []
+    for i in range(4):
+        players.append(Player.createPlayer(f"Player{i+1}",camManager.cameras[0],((0,0),(100,100))))
+    for p in players:    
+            # print(p.name)
+        Thread(target=functionForever, args=(p,)).start()
+        # cv2.waitKey(1)
     while True:
-        player.scanActivity()
-    # cv2.imwrite("test.jpg",cv2.VideoCapture(0,cv2.CAP_V4L2).read()[1])
+        cv2.imshow("Raw",camManager.cameras[0].currentImage)
+        print(f"High: {camManager.cameras[0].currentImage[656][128]}")
+        print(f"Low: {camManager.cameras[0].currentImage[682][128]}")
+        cv2.waitKey(1)
+        
+    # test = cv2.VideoCapture(0,cv2.CAP_ANY)
+    # ret, img = test.read()
+    # ret, img = test.read()
+
+    # print(ret)
+    # print(img)
+    # cv2.imwrite("test.jpg",img)
     return
 
-# constructTemplates()
+def functionForever(p):
+    while True:
+        p.scanActivity()
+        # print(p.currentRace)
+        # print(p.getImage())
+constructTemplates()
 main()

@@ -1,6 +1,11 @@
 import cv2
 
 MAX_FAIL = 10
+
+# Send Message to Logs
+def sendMessage(type,message):
+    logManager.sendMessage(type, "CameraEnumerator",message)
+
 class CamInfo:
     def __init__(self,index,name):
         self.name = name
@@ -10,10 +15,12 @@ def enumerate_cameras(capMethod):
     borked = 0
     camList = []
     while borked < MAX_FAIL:
-            print(f"checking index {index}")
+            sendMessage(f"checking camera index \'{index}\'")
             cam = cv2.VideoCapture(index,capMethod)
             if(cam.isOpened()):
+                print(cam.read()[0])
                 camList.append(CamInfo(index,f"Camera{index}"))
+                cam.release()
             else:
                 borked += 1
             index += 1

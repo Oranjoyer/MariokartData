@@ -1,8 +1,8 @@
 import time
 
 logList = []
-CONSOLE_LOG_LEVEL = "ALL"
-LOG_HIERARCHY = ("NONE","Error","Warning","Info","ExInfo","ALL")
+CONSOLE_LOG_LEVEL = "Info"
+LOG_HIERARCHY = ("NONE","Error","Warning","Info","ExInfo","Debug","ALL")
 
 # Determines if the set Log Level includes passed String 'type'
 def logLevelIncludesType(type):

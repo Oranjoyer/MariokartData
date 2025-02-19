@@ -4,7 +4,15 @@ from raceTracker import IndivRace, trackList
 from raceTracker import EventDetails
 from templateManager import PLACES_FORMATTED
 from camManager import VideoSource
+from frameAverage import getAverageFrameColor as averageFrame
+import logManager
 import time
+import cv2
+
+# Sends Log Message with 'PlayerManager' source
+def sendMessage(type,message):
+    logManager.sendMessage(type, "PlayerManager", message)
+
 # Class that manages each player and their data
 playerList = []
 class Player:
@@ -12,6 +20,8 @@ class Player:
         self.name = name
         self.vSource = vSource
         vSource.setActivity(True)
+        self.imageSamples = []
+        self.sampleLen = 3
 
         # Default Initialization of Player's Combo, will be changed post Init with gui
         self.character = "Mario"
@@ -33,13 +43,25 @@ class Player:
     def enablePlayer(self):
         self.vSource.setActivity(False)
     def getImage(self):
-        return self.vSource.getImage()
+        if(self.sampleLen <= 1):
+            return self.vSource.getImage()
+        else:
+            self.imageSamples.append(self.vSource.getImage())
+            if(len(self.imageSamples)>self.sampleLen):
+                self.imageSamples.pop(0)
+            average = averageFrame(self.imageSamples)
+            return average
     def scanActivity(self):
+        # print(activityList)
         for act in activityList:
+            # print(act)
+            # print(act.checkActivity(self.vSource.getImage(),self.currentActivity))
             if(act.checkActivity(self.vSource.getImage(),self.currentActivity)):
                 if(act.name == "CommError"):
                     self.currentActivity = None
                 else:
+                    if(self.currentActivity != act):
+                        sendMessage("Info",f"Player \'{self.name}\' switched activities to \'{act.name}\'")
                     self.currentActivity = act
         if(self.currentActivity != None):
             if(self.currentActivity.name=="TrackLoad"):
@@ -50,11 +72,13 @@ class Player:
     
                     self.currentRace = IndivRace(self,track)
             elif(self.currentActivity.name=="Race"):
+                if(self.currentRace==None):
+                    self.currentRace = IndivRace(self,None)
                 if(self.currentRace.startTime == 0):
                     self.currentRace.startTime = time.time()
                 # Update Race Conditions
                 self.currentRace.scanRace()
-            elif(self.currentActivity.name =="RaceEnd"):
+            elif((self.currentActivity.name =="RaceEnd") and (self.currentRace != None)):
                 # Get The Time the Race Ends
                 if(self.currentRace.endTime == 0):
                     self.currentRace.endTime = time.time()
@@ -65,7 +89,10 @@ class Player:
                     finalizedPlacement=self.currentRace.checkPlace()
                     if(finalizedPlacement != 0):
                         self.currentRace.finalPlace = finalizedPlacement
-                        self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{self.currentRace.track.name}\' with {PLACES_FORMATTED[finalizedPlacement-1]} place"))
+                        trackName = None
+                        if(self.currentRace.track != None):
+                            trackName = self.currentRace.track.name
+                        self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{trackName}\' with {PLACES_FORMATTED[finalizedPlacement-1]} place"))
     @staticmethod
     def createPlayer(name,camera,crop):
         source = VideoSource(name,camera,crop)
