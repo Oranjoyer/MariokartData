@@ -11,10 +11,12 @@ TEMPLATE_FOLDERS = (PLACE_TEMPLATE_FOLDER,RACE_PROGRESS_FOLDER,RESULT_FOLDER)
 
 # Simplifies Function to Retrieve Asset files from the filesystem
 def getAsset(folder,name):
-    if(fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder)+name,name)==None):
+    asset = fileService.loadFile(fileService.formatStringsAsPath(BASE_PATH,ASSETS_FOLDER,folder)+name,name)
+    if(asset==None):
         sendMessage("Error",f"Asset \'{name}\' failed to load")
     else:
         sendMessage("Info",f"Asset \'{name}\' successfully loaded")
+        return asset
 
 # Send Message to Logs
 def sendMessage(type,message):

@@ -5,6 +5,8 @@ from raceTracker import EventDetails
 from templateManager import PLACES_FORMATTED
 from camManager import VideoSource
 from frameAverage import getAverageFrameColor as averageFrame
+from trackRecog import new_recog as detectTrack
+from playerCount import count_players
 import logManager
 import time
 import cv2
@@ -69,8 +71,11 @@ class Player:
                     track = detectTrack(self.getImage())
                     while(track == None):
                         track = detectTrack(self.getImage())
-    
-                    self.currentRace = IndivRace(self,track)
+                        playerCount = count_players(self.getImage())
+
+                    race = IndivRace(self,track)
+                    race.playerCount = playerCount
+                    self.currentRace = race
             elif(self.currentActivity.name=="Race"):
                 if(self.currentRace==None):
                     self.currentRace = IndivRace(self,None)
@@ -92,15 +97,15 @@ class Player:
                         trackName = None
                         if(self.currentRace.track != None):
                             trackName = self.currentRace.track.name
-                        self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{trackName}\' with {PLACES_FORMATTED[finalizedPlacement-1]} place"))
+                        self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{trackName}\' with {PLACES_FORMATTED[finalizedPlacement]} place"))
     @staticmethod
     def createPlayer(name,camera,crop):
         source = VideoSource(name,camera,crop)
         return Player(name,source)
 
-def detectTrack(image):
-    # Just Waiting for track detection modules
-    return trackList[0]
+# def detectTrack(image):
+#     # Just Waiting for track detection modules
+#     return trackList[0]
 def createPlayerFromDict(diction):
     if(type(diction)!=dict & type(diction) == str):
         sendMessage("Info","String passed into \'createPlayer\' function. Attempting to parse as JSON")

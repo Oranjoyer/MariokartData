@@ -59,6 +59,7 @@ class IndivRace:
         self.raceDuration = 0
         self.eventLog = []
         self.finalPlace = 0
+        self.playerCount = 12
 
         # Mid Race Info
         self.items = (None,None)
@@ -90,7 +91,7 @@ class IndivRace:
 
     def checkPlace(self):
         matchedPlaceTemplate = bulkCompare(placeTemplateList,self.player.getImage(),0)
-        placeMatch = matchedPlaceTemplate[2]
+        placeMatch = matchedPlaceTemplate[2]+1
         return matchedPlaceTemplate,placeMatch
         
     # Check Current Screen for Change in Placement
@@ -98,7 +99,7 @@ class IndivRace:
         matchedPlaceTemplate,placeMatch = self.checkPlace()
         if((matchedPlaceTemplate[0] != None) and (placeMatch != self.place)):
             self.place = placeMatch
-            eventString = f"Player \'{self.player.name}\' moved to {PLACES_FORMATTED[placeMatch]} place"
+            eventString = f"Player \'{self.player.name}\' moved to {PLACES_FORMATTED[placeMatch-1]} place"
             self.eventLog.append(EventDetails.reportEvent(self,eventString))
 
     def scanLaps(self):
