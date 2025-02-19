@@ -30,7 +30,7 @@ def main():
     thread = Thread(target=constantCamUpdate)
     thread.start()
     players = []
-    for i in range(4):
+    for i in range(1):
         players.append(Player.createPlayer(f"Player{i+1}",camManager.cameras[0],((0,0),(100,100))))
     for p in players:    
             # print(p.name)
@@ -38,8 +38,8 @@ def main():
         # cv2.waitKey(1)
     while True:
         cv2.imshow("Raw",camManager.cameras[0].currentImage)
-        print(f"High: {camManager.cameras[0].currentImage[656][128]}")
-        print(f"Low: {camManager.cameras[0].currentImage[682][128]}")
+        # print(f"High: {camManager.cameras[0].currentImage[656][128]}")
+        # print(f"Low: {camManager.cameras[0].currentImage[682][128]}")
         cv2.waitKey(1)
         
     # test = cv2.VideoCapture(0,cv2.CAP_ANY)
@@ -56,5 +56,5 @@ def functionForever(p):
         p.scanActivity()
         # print(p.currentRace)
         # print(p.getImage())
-constructTemplates()
+# constructTemplates()
 main()

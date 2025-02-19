@@ -86,7 +86,7 @@ class Player:
                     self.currentRace.raceDuration = self.currentRace.endTime-self.currentRace.startTime
                 # Get Final Placement Reported 
                 if(self.currentRace.finalPlace == 0):
-                    finalizedPlacement=self.currentRace.checkPlace()
+                    finalizedPlacement=self.currentRace.checkPlace()[1]
                     if(finalizedPlacement != 0):
                         self.currentRace.finalPlace = finalizedPlacement
                         trackName = None

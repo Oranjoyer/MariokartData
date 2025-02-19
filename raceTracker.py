@@ -7,6 +7,7 @@ from fileService import BASE_PATH
 from templateManager import placeTemplateList, lapTemplateList,coinTemplateList
 from templateManager import PLACES_FORMATTED
 from templateManager import bulkCompare
+from coinCount import countCoins
 import statistics
 import cv2
 from io import StringIO
@@ -113,28 +114,21 @@ class IndivRace:
             self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' moved to lap {self.lap}"))
     
     def scanCoins(self):
-        playerImg = self.player.getImage()
-        lowCoin = max(self.coins-3, 0)
-        availCoins = (coinTemplateList[lowCoin],) + tuple(coinTemplateList[self.coins:])
-
-
-        coinMatch = bulkCompare(availCoins,playerImg,0) # returns (Template, loc, indexInList)
-        averageLoc = coinMatch[3]
+        playerImg = self.player.vSource.getImage()
+        coinMatch = countCoins(playerImg)
+        # lowCoin = max(self.coins-3, 0)
         
-        if(coinMatch!=None and coinMatch[2]==0):
-            self.coinVote = addToLine(lowCoin,self.coinVote,self.voteLim)
-        elif(coinMatch!=None and coinMatch[2]>0):
-            self.coinVote = addToLine(self.coins + coinMatch[2]-1,self.coinVote,self.voteLim)
-        # print(str(self.coinVote[0]) + f"Ave Loc: {averageLoc}")
+        if(coinMatch!=-1):
+            self.coinVote = addToLine(coinMatch,self.coinVote,self.voteLim)
 
         if(self.coinVote[0] != self.coins and self.coinVote.count(self.coinVote[0]) > self.voteLim/2):
             if(self.coinVote[0]<self.coins):
                 self.coins = self.coinVote[0]
                 self.hitsDetected +=1
-                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch[1]}")
+                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch}")
             elif(self.coinVote[0] > self.coins):
                 self.coins = self.coinVote[0]
-                self.reportEvent(f"Player \'{self.player.name}\' coins increased to {self.coins}: {coinMatch[1]}")
+                self.reportEvent(f"Player \'{self.player.name}\' coins increased to {self.coins}: {coinMatch}")
 
 
 
