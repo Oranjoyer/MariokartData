@@ -33,7 +33,7 @@ class Activity:
 
 def collectActivities():
     activityList.append(Activity("TrackLoad",None,[getLoadedTemplate("TrackLoad")]))
-    activityList.append(Activity("Race",["TrackLoad"],[getLoadedTemplate("Go")]))
+    activityList.append(Activity("Race",["TrackLoad","RaceEnd"],[getLoadedTemplate("Go")]))
     activityList.append(Activity("RaceEnd",["Race"],[getLoadedTemplate("Finish")]))
 
 def init():

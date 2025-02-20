@@ -67,11 +67,12 @@ class Player:
                     self.currentActivity = act
         if(self.currentActivity != None):
             if(self.currentActivity.name=="TrackLoad"):
-                if(self.currentRace == None):
+                if(self.currentRace == None or self.currentRace.track == None):
                     track = detectTrack(self.getImage())
-                    while(track == None):
-                        track = detectTrack(self.getImage())
-                        playerCount = count_players(self.getImage())
+                    playerCount = 12
+                    # while(track == None):
+                    track = detectTrack(self.getImage())
+                    playerCount = count_players(self.getImage())
 
                     race = IndivRace(self,track)
                     race.playerCount = playerCount
@@ -81,9 +82,10 @@ class Player:
                     self.currentRace = IndivRace(self,None)
                 if(self.currentRace.startTime == 0):
                     self.currentRace.startTime = time.time()
+                    self.currentRace.reportEvent(f"Race Started on Track \'{self.currentRace.track.name}\' with {self.currentRace.playerCount} players")
                 # Update Race Conditions
                 self.currentRace.scanRace()
-            elif((self.currentActivity.name =="RaceEnd") and (self.currentRace != None)):
+            elif((self.currentActivity.name =="RaceEnd") and (self.currentRace!=None)):
                 # Get The Time the Race Ends
                 if(self.currentRace.endTime == 0):
                     self.currentRace.endTime = time.time()
@@ -97,7 +99,9 @@ class Player:
                         trackName = None
                         if(self.currentRace.track != None):
                             trackName = self.currentRace.track.name
-                        self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{trackName}\' with {PLACES_FORMATTED[finalizedPlacement]} place"))
+                        self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{trackName}\' with {PLACES_FORMATTED[finalizedPlacement-1]} place"))
+                        self.raceList.append(self.currentRace)
+                        self.currentRace = None
     @staticmethod
     def createPlayer(name,camera,crop):
         source = VideoSource(name,camera,crop)

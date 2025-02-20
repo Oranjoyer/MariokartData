@@ -12,6 +12,7 @@ from templateManager import constructTemplates
 from playerManager import Player
 from frameAverage import edgeDetect
 from threading import Thread
+import trackRecog
 INIT = False
 
 # Executes Init Functions Of all Modules
@@ -20,6 +21,7 @@ def init():
     camManager.init()
     raceTracker.init()
     activityManager.init()
+    trackRecog.init()
     global INIT
     INIT = True
 def constantCamUpdate():

@@ -1,17 +1,19 @@
 # Credit to Glitcher01
 
-import pyautogui
+# import pyautogui
 import cv2
 import os
 import fileService
 import assetManager
-from raceTracker import trackList
+from templateManager import compareFullImg
+from raceTracker import trackList as track_key
+import numpy as np
 # directory = os.fsencode('LoadingScreens')
 trackSpriteSheet = None
 trackBG = None
 board_size = (288, 162)
 # track_key = ['Mario Kart Stadium', 'Water Park', 'Sweet Sweet Canyon', 'Thwomp Ruins', 'Mario Circuit', 'Toad Harbor', 'Twisted Mansion', 'Shy Guy Falls', 'Sunshine Airport', 'Dolphin Shoals', 'Electrodrome', 'Mount Wario', 'Cloudtop Cruise', 'Bone-Dry Dunes', "Bowser's Castle", 'Rainbow Road', 'Wii Moo Moo Meadows', 'GBA Mario Circuit', 'DS Cheep Cheep Beach', "N64 Toad's Turnpike", 'GCN Dry Dry Desert', 'SNES Donut Plains 3', 'N64 Royal Raceway', '3DS DK Jungle', 'DS Wario Stadium', 'GCN Sherbet Land', '3DS Music Park', 'N64 Yoshi Valley', 'DS Tick-Tock Clock', '3DS Piranha Plant Slide', 'Wii Grumble Volcano', 'N64 Rainbow Road', 'GCN Yoshi Circuit', 'Excitebike Arena', 'Dragon Driftway', 'Mute City', "Wii Wario's Gold Mine", 'SNES Rainbow Road', 'Ice Ice Outpost', 'Hyrule Circuit', 'GCN Baby Park', 'GBA Cheese Land', 'Wild Woods', 'Animal Crossing', '3DS Neo Bowser City', 'GBA Ribbon Road', 'Super Bell Subway', 'Big Blue', 'Tour Paris Promenade', '3DS Toad Circuit', 'N64 Choco Mountain', 'Wii Coconut Mall', 'Tour Tokyo Blur', 'DS Shroom Ridge', 'GBA Sky Garden', 'Ninja Hideaway', 'Tour New York Minute', 'SNES Mario Circuit 3', 'N64 Kalimari Desert', 'DS Waluigi Pinball', 'Tour Sydney Sprint', 'GBA Snow Land', 'Wii Mushroom Gorge', 'Sky-High Sundae', 'Tour London Loop', 'GBA Boo Lake', '3DS Rock Rock Mountain', 'Wii Maple Treeway', 'Tour Berlin Byways', 'DS Peach Gardens', 'Merry Mountain', '3DS Rainbow Road', 'Tour Amsterdam Drift', 'GBA Riverside Park', 'Wii DK Summit', "Yoshi's Island", 'Tour Bangkok Rush', 'DS Mario Circuit', 'GCN Waluigi Stadium', 'Tour Singapore Speedway', 'Tour Athens Dash', 'GCN Daisy Cruiser', 'Wii Moonview Highway', 'Squeaky Clean Sprint', 'Tour Los Angeles Laps', 'GBA Sunset Wilds', 'Wii Koopa Cape', 'Tour Vancouver Velocity', 'Tour Rome Avanti', 'GCN DK Mountain', 'Wii Daisy Circuit', 'Piranha Plant Cove', 'Tour Madrid Drive', "3DS Rosalina's Ice World", 'SNES Bowser Castle 3', 'Wii Rainbow Road']
-track_key = trackList
+# track_key = trackList
 def init():
     global trackSpriteSheet
     global trackBG
@@ -30,10 +32,12 @@ def new_recog(img):
     if height != 1080 or width != 1920:
         img = cv2.resize(img, (0, 0), fx=1920/width, fy=1080/height)
     img = img[923:1057,224:1696]
-    cv2.imwrite('test-work.png', subdivisions[1])
+    # cv2.imwrite('test-work.png', subdivisions[1])
     for s in subdivisions:
-        try: pyautogui.locate(s, img, grayscale=True, confidence=0.95)
-        except pyautogui.ImageNotFoundException:
+        # print(s)
+        try: compareFullImg(s,img,.15)
+        except Exception as e:
+            print(e)
             return False
     track_ss = trackSpriteSheet
     track_img = img[15:118,1189:1362]
@@ -43,8 +47,8 @@ def new_recog(img):
             height, width, channels = current_track.shape
             current_track = cv2.resize(current_track, (0, 0), fx=223/width, fy=126/height)
             current_track = current_track[15:118,24:197]
-            try:
-                if pyautogui.locate(current_track, track_img, grayscale=False, confidence=0.87):
+            try: 
+                if compareFullImg(current_track,track_img,0.15)[0]:
                     return track_key[row * 8 + col]
                     break
             except pyautogui.ImageNotFoundException: # If image doesn't match, move on to next one

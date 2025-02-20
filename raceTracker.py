@@ -10,6 +10,7 @@ from templateManager import bulkCompare
 from coinCount import countCoins
 import statistics
 import cv2
+from lapCount import countLaps
 from io import StringIO
 trackList = []
 
@@ -104,14 +105,15 @@ class IndivRace:
 
     def scanLaps(self):
         playerImg = self.player.vSource.getImage()
-        if(not((self.lap >= 3) and (self.track != None and self.track.name == "Baby Park")) and (self.lap >= len(lapTemplateList))):
+        lapsCounted = countLaps(playerImg)
+        if(lapsCounted == -1):
             return
-        nextLapTemplate = lapTemplateList[self.lap]
-        nextCompare = nextLapTemplate.compareWithImage(self.player.getImage(),0)
-
-        currentTemplate = lapTemplateList[self.lap-1]
-        if(nextCompare[0] and (nextCompare[1] > currentTemplate.compareWithImage(self.player.getImage(),0)[1])):
-            self.lap += 1
+        if(lapsCounted < self.lap):
+            sendMessage("Warning",f"Lap count dropped from \'{self.lap}\' to \'{lapsCounted}\', Error may be present in code")
+        elif(lapsCounted >= self.lap + 2):
+            sendMessage("Warning",f"Lap count jumped from \'{self.lap}\' to \'{lapsCounted}\', Error may be present in code")
+        if(lapsCounted != self.lap):
+            self.lap = lapsCounted
             self.eventLog.append(EventDetails.reportEvent(self,f"Player \'{self.player.name}\' moved to lap {self.lap}"))
     
     def scanCoins(self):
@@ -124,12 +126,15 @@ class IndivRace:
 
         if(self.coinVote[0] != self.coins and self.coinVote.count(self.coinVote[0]) > self.voteLim/2):
             if(self.coinVote[0]<self.coins):
+                if(self.coins-self.coinVote[0]>3):
+                    sendMessage("Warning","Coin Count Dropped by over 3, there may be a fault in coin tracking")
                 self.coins = self.coinVote[0]
                 self.hitsDetected +=1
-                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch}")
+                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch}| Total Collected: \'{self.totalCoins}\'")
             elif(self.coinVote[0] > self.coins):
+                self.totalCoins += self.coinVote[0] - self.coins
                 self.coins = self.coinVote[0]
-                self.reportEvent(f"Player \'{self.player.name}\' coins increased to {self.coins}: {coinMatch}")
+                self.reportEvent(f"Player \'{self.player.name}\' coins increased to {self.coins}| Total Collected: \'{self.totalCoins}\'")
 
 
 

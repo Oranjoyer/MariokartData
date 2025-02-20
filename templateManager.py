@@ -46,7 +46,11 @@ def compareImages(templateImg, image, templateCoords, imageCoords, tolerance):
         return True, loc
     # print(loc)
     return False, 0
-    
+def compareFullImg(templateImg,image,tolerance):
+    if(templateImg.shape[:2]!=image.shape[:2]):
+        image = cv2.resize(image,(templateImg.shape[1],templateImg.shape[0]))
+    templateImg = edgeDetect(templateImg)
+    return compareImages(templateImg,image,((0,0),(templateImg.shape[1],templateImg.shape[0])),((0,0),(templateImg.shape[1],templateImg.shape[0])),tolerance)
 def bulkCompare(templateList,img,tolerance):
     sendMessage("ExInfo",f"Checking template List: {templateList}")
     locList=[]
