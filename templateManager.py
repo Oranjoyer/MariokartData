@@ -110,7 +110,12 @@ class Template:
 
 def createPlaces():
     for i in range(12):
-        createTemplate(f"{i+1}Place",((1086,568),((1086+130),(568+121))),("Race","Drive","!PlaceChange",PLACES_FORMATTED[i]),0.15,"placeTemplates")
+        tol = 0.15
+        if(i == 1):
+            tol = 0.18
+        if(i == 2):
+            tol = 0.14
+        createTemplate(f"{i+1}Place",((1086,568),((1086+130),(568+121))),("Race","Drive","!PlaceChange",PLACES_FORMATTED[i]),tol,"placeTemplates")
 def createLaps():
     for i in range(3):
         createTemplate(f"Lap{i+1}",((207,652),(207+24,652+38)),[f"Lap{i+1}"],0.5,"raceProgress")

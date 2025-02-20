@@ -7,9 +7,16 @@ from camManager import VideoSource
 from frameAverage import getAverageFrameColor as averageFrame
 from trackRecog import new_recog as detectTrack
 from playerCount import count_players
+from functionAgreement import Agree
 import logManager
 import time
 import cv2
+
+PLACE_VOTES_NEEDED = 5
+PLACE_VOTES_TOTAL = 8
+
+PLAYER_COUNT_NEEDED = 5
+PLAYER_COUNT_TOTAL = 5
 
 # Sends Log Message with 'PlayerManager' source
 def sendMessage(type,message):
@@ -38,6 +45,10 @@ class Player:
         self.placesRec = []
         self.teamColor = None
         self.currentRace = None
+        self.placeVote = Agree(PLACE_VOTES_NEEDED,PLACE_VOTES_TOTAL)
+        self.countVote = Agree(PLAYER_COUNT_NEEDED,PLAYER_COUNT_TOTAL)
+        # self.trackDetectDelay = 5 # break loop this many times before scanning track
+        # self.trackDetectNum = 0
 
         self.raceList = []
     def disablePlayer(self):
@@ -68,14 +79,17 @@ class Player:
         if(self.currentActivity != None):
             if(self.currentActivity.name=="TrackLoad"):
                 if(self.currentRace == None or self.currentRace.track == None):
-                    track = detectTrack(self.getImage())
+                    track = detectTrack(self.vSource.getImage())
                     playerCount = 12
                     # while(track == None):
-                    track = detectTrack(self.getImage())
-                    playerCount = count_players(self.getImage())
+                    # track = detectTrack(self.getImage())
+                    playerCount = count_players(self.vSource.getImage())
+                    count = self.countVote.addVal(playerCount)
+                    if(count[0]==False):
+                        return
 
                     race = IndivRace(self,track)
-                    race.playerCount = playerCount
+                    race.playerCount = count[1]
                     self.currentRace = race
             elif(self.currentActivity.name=="Race"):
                 if(self.currentRace==None):
@@ -93,8 +107,11 @@ class Player:
                     self.currentRace.raceDuration = self.currentRace.endTime-self.currentRace.startTime
                 # Get Final Placement Reported 
                 if(self.currentRace.finalPlace == 0):
-                    finalizedPlacement=self.currentRace.checkPlace()[1]
-                    if(finalizedPlacement != 0):
+                    placeCheck = self.currentRace.checkPlace()[1]
+                    if(placeCheck == 0):
+                        return
+                    placeAgree, finalizedPlacement=self.placeVote.addVal(placeCheck)
+                    if(placeAgree != False):
                         self.currentRace.finalPlace = finalizedPlacement
                         trackName = None
                         if(self.currentRace.track != None):
@@ -102,6 +119,7 @@ class Player:
                         self.currentRace.eventLog.append(EventDetails.reportEvent(self.currentRace,f"Player \'{self.name}\' finished race on track \'{trackName}\' with {PLACES_FORMATTED[finalizedPlacement-1]} place"))
                         self.raceList.append(self.currentRace)
                         self.currentRace = None
+                        self.placeVote.reset()
     @staticmethod
     def createPlayer(name,camera,crop):
         source = VideoSource(name,camera,crop)

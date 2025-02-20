@@ -7,13 +7,15 @@ from fileService import BASE_PATH
 from templateManager import placeTemplateList, lapTemplateList,coinTemplateList
 from templateManager import PLACES_FORMATTED
 from templateManager import bulkCompare
+from functionAgreement import Agree
 from coinCount import countCoins
 import statistics
 import cv2
 from lapCount import countLaps
 from io import StringIO
 trackList = []
-
+PLACE_VOTES_NEEDED = 4
+PLACE_VOTES_TOTAL = 6
 
 # Sends Log Message with 'RaceTracker' source
 def sendMessage(type,message):
@@ -69,6 +71,7 @@ class IndivRace:
         self.hitsDetected = 0
         self.place = 0
         self.totalCoins = 0
+        self.placeVote = Agree(PLACE_VOTES_NEEDED,PLACE_VOTES_TOTAL)
 
         self.voteLim = 5
         self.coinVote = tuple(0 for _ in range(self.voteLim))
@@ -97,8 +100,11 @@ class IndivRace:
         
     # Check Current Screen for Change in Placement
     def scanPlace(self):
-        matchedPlaceTemplate,placeMatch = self.checkPlace()
-        if((matchedPlaceTemplate[0] != None) and (placeMatch != self.place)):
+        placeCheck = self.checkPlace()
+        if(placeCheck[1] == 0):
+            return
+        placeAccept,placeMatch = self.placeVote.addVal(placeCheck[1])
+        if((placeAccept == True) and (placeMatch != self.place)):
             self.place = placeMatch
             eventString = f"Player \'{self.player.name}\' moved to {PLACES_FORMATTED[placeMatch-1]} place"
             self.eventLog.append(EventDetails.reportEvent(self,eventString))
@@ -130,7 +136,7 @@ class IndivRace:
                     sendMessage("Warning","Coin Count Dropped by over 3, there may be a fault in coin tracking")
                 self.coins = self.coinVote[0]
                 self.hitsDetected +=1
-                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch}| Total Collected: \'{self.totalCoins}\'")
+                self.reportEvent(f"Player \'{self.player.name}\' coins decreased to {self.coins}: {coinMatch}| Hits Detected: \'{self.hitsDetected}\'")
             elif(self.coinVote[0] > self.coins):
                 self.totalCoins += self.coinVote[0] - self.coins
                 self.coins = self.coinVote[0]
